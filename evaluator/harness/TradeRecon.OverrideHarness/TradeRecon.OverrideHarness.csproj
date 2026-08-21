@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <CandidateRoot Condition="'$(CandidateRoot)' == ''">$(MSBuildThisFileDirectory)..\..\..\src\canonical-modernized</CandidateRoot>
+    <HarnessOutputRoot Condition="'$(HarnessOutputRoot)' == ''">$(MSBuildThisFileDirectory).artifacts</HarnessOutputRoot>
+    <BaseOutputPath>$(HarnessOutputRoot)\bin\</BaseOutputPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="$(CandidateRoot)\src\TradeRecon.Domain\TradeRecon.Domain.csproj" />
+    <ProjectReference Include="$(CandidateRoot)\src\TradeRecon.Application\TradeRecon.Application.csproj" />
+    <ProjectReference Include="$(CandidateRoot)\src\TradeRecon.Infrastructure\TradeRecon.Infrastructure.csproj" />
+  </ItemGroup>
+</Project>

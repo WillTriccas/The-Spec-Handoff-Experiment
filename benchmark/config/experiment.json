@@ -1,0 +1,133 @@
+{
+  "schemaVersion": "spec-handoff-experiment/2.0.0",
+  "benchmarkVersion": "spec-handoff-fsi-v2.0.0",
+  "status": "not-evaluated",
+  "source": {
+    "repository": "https://github.com/WillTriccas/The-Spec-Advantage-Demo",
+    "commit": "05547458aeb09d651237fa521459d742e1d36e85"
+  },
+  "approvalsPath": "benchmark/config/approvals.json",
+  "repetitionsPerLane": 3,
+  "authoring": {
+    "methodology": "github-spec-kit",
+    "methodologyRepository": "https://github.com/github/spec-kit",
+    "methodologyCommit": "5cf60225e989ee9c7d9ac789352838676a00181b",
+    "requiredPhases": [
+      "constitution",
+      "specify",
+      "clarify",
+      "plan",
+      "checklist",
+      "tasks",
+      "analyze"
+    ],
+    "modelId": "claude-opus-5",
+    "agentVersion": "1.0.80",
+    "reasoningEffort": "high",
+    "freshConversationPerEpisode": true,
+    "sealedEvaluatorBlind": true,
+    "humanApprovalRequired": true
+  },
+  "evidenceQualification": {
+    "level": "bounded-measured",
+    "limitation": "Copilot exposes selected model IDs and agent version but not immutable provider build IDs. Claims are bounded to the recorded Copilot model-selection boundary."
+  },
+  "models": {
+    "opus": {
+      "id": "claude-opus-5",
+      "displayName": "Claude Opus 5",
+      "buildId": "not-exposed-by-copilot",
+      "agentVersion": "1.0.80",
+      "agentBuildId": "not-separately-exposed-by-copilot",
+      "effortParams": {
+        "reasoningEffort": "high"
+      }
+    },
+    "mai": {
+      "id": "mai-code-1.1-flash",
+      "displayName": "MAI Code 1.1 Flash",
+      "buildId": "not-exposed-by-copilot",
+      "agentVersion": "1.0.80",
+      "agentBuildId": "not-separately-exposed-by-copilot",
+      "effortParams": {
+        "reasoningEffort": "high"
+      }
+    }
+  },
+  "episodes": [
+    {
+      "id": "modernization",
+      "name": "Legacy trade-reconciliation modernization",
+      "baselineRef": "refs/tags/baseline-legacy-trade-reconciliation-v1",
+      "baselinePath": "src/legacy-trade-reconciliation",
+      "taskBrief": "benchmark/prompts/modernization.md",
+      "authoringPlan": "authoring/plans/modernization.json",
+      "authoringPrompt": "authoring/prompts/modernization.md",
+      "authoringEvidence": "authoring/evidence/modernization.json",
+      "specBundle": "specs/modernization/approved"
+    },
+    {
+      "id": "audit-feature",
+      "name": "Explainable maker-checker audit feature",
+      "baselineRef": "refs/tags/baseline-canonical-modernized-v1",
+      "baselinePath": "src/canonical-modernized",
+      "taskBrief": "benchmark/prompts/audit-feature.md",
+      "authoringPlan": "authoring/plans/audit-feature.json",
+      "authoringPrompt": "authoring/prompts/audit-feature.md",
+      "authoringEvidence": "authoring/evidence/audit-feature.json",
+      "specBundle": "specs/audit-feature/approved"
+    }
+  ],
+  "lanes": [
+    {
+      "id": "opus-raw",
+      "modelTier": "opus",
+      "inputMode": "raw"
+    },
+    {
+      "id": "mai-spec",
+      "modelTier": "mai",
+      "inputMode": "spec"
+    }
+  ],
+  "executionPolicy": {
+    "freshWorkspacePerRun": true,
+    "freshConversationPerRun": true,
+    "crossRunMemory": false,
+    "humanRemediation": false,
+    "preserveAllTerminalStates": true,
+    "terminalStates": [
+    "completed",
+    "failed",
+    "cancelled"
+    ],
+    "failedRunTreatment": "score-zero-and-fail-applicable-gates",
+    "timeoutSeconds": null,
+    "toolCallCap": null,
+    "completionBoundary": "run-until-completed-failed-or-cancelled",
+    "toolPermissionProfile": "standard-coding",
+    "runOrder": "deterministic-randomized-interleaved",
+    "runOrderSeed": "spec-handoff-fsi-v2.0.0-2026-08-21",
+    "captureQueueAndThrottleTime": true,
+    "selectiveRerunsAllowed": false,
+    "measurements": {
+      "primary": [
+        "sealed-output-quality-score",
+        "productive-execution-seconds",
+        "implementation-token-total"
+      ],
+      "tokenCategories": [
+        "uncached-input",
+        "cached-input",
+        "output",
+        "reasoning"
+      ],
+      "secondary": [
+        "wall-clock-elapsed-seconds",
+        "queue-and-throttle-seconds",
+        "spec-authoring-seconds-amortized",
+        "spec-authoring-tokens-amortized"
+      ]
+    }
+  }
+}

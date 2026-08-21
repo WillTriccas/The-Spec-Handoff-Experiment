@@ -1,0 +1,28 @@
+{
+  "schemaVersion": "freeze-approvals/1.0.0",
+  "status": "not-evaluated",
+  "scenario": {
+    "approved": false,
+    "reviewer": null,
+    "approvedAt": null,
+    "evidenceRef": null
+  },
+  "specifications": {
+    "approved": false,
+    "reviewer": null,
+    "approvedAt": null,
+    "evidenceRef": null
+  },
+  "evaluator": {
+    "approved": false,
+    "reviewer": null,
+    "approvedAt": null,
+    "evidenceRef": null
+  },
+  "claimAdjudication": {
+    "approved": false,
+    "reviewer": null,
+    "approvedAt": null,
+    "evidenceRef": null
+  }
+}

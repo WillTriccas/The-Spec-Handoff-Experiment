@@ -1,0 +1,4 @@
+trade_id,account,instrument,quantity,settlement_date,currency,reasons,position_id,settlement_id
+T-1001,ACC-001,IBM.N,100,2025-03-17,USD,DuplicateTradeId,,
+T-1003,ACC-002,VOD.L,1000,2025-03-17,GBP,SettlementCurrencyMismatch,P-2003,S-3003
+T-1004,ACC-003,TSLA.OQ,75,2025-03-18,USD,SettlementAmountOutOfTolerance,P-2004,S-3004

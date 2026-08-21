@@ -1,0 +1,403 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/WillTriccas/The-Spec-Handoff-Experiment/contracts/run.schema.json",
+  "title": "Benchmark run artifact",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "dataKind",
+    "runId",
+    "benchmarkVersion",
+    "episodeId",
+    "laneId",
+    "model",
+    "inputMode",
+    "repetition",
+    "baseline",
+    "brief",
+    "spec",
+    "frozenInputs",
+    "execution",
+    "source",
+    "evidence"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "1.1.0" },
+    "dataKind": { "enum": ["illustrative", "measured"] },
+    "runId": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]+$"
+    },
+    "benchmarkVersion": { "type": "string", "minLength": 1 },
+    "episodeId": { "enum": ["modernization", "audit-feature"] },
+    "laneId": { "enum": ["opus-raw", "mai-spec"] },
+    "model": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "displayName", "tier", "buildId"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "displayName": { "type": "string", "minLength": 1 },
+        "tier": { "enum": ["opus", "mai"] },
+        "buildId": { "type": ["string", "null"] }
+      }
+    },
+    "inputMode": { "enum": ["raw", "spec"] },
+    "repetition": { "type": "integer", "minimum": 1 },
+    "baseline": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ref", "commit", "sha256"],
+      "properties": {
+        "ref": { "type": "string", "minLength": 1 },
+        "commit": { "type": "string", "minLength": 7 },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "brief": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256"],
+      "properties": {
+        "path": { "type": "string", "minLength": 1 },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "spec": {
+      "oneOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "sha256",
+            "qualityScore",
+            "authoringEffort"
+          ],
+          "properties": {
+            "id": { "type": "string", "minLength": 1 },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "qualityScore": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "authoringEffort": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "elapsedSeconds",
+                "inputTokens",
+                "cachedInputTokens",
+                "outputTokens",
+                "reasoningTokens",
+                "estimatedCostUsd",
+                "costEvidenceRef",
+                "costMethod",
+                "amortizedAcrossRuns"
+              ],
+              "properties": {
+                "elapsedSeconds": { "type": "number", "minimum": 0 },
+                "inputTokens": { "type": ["integer", "null"], "minimum": 0 },
+                "cachedInputTokens": { "type": ["integer", "null"], "minimum": 0 },
+                "outputTokens": { "type": ["integer", "null"], "minimum": 0 },
+                "reasoningTokens": { "type": ["integer", "null"], "minimum": 0 },
+                "estimatedCostUsd": {
+                  "type": ["number", "null"],
+                  "minimum": 0
+                },
+                "costEvidenceRef": { "type": ["string", "null"] },
+                "costMethod": { "type": ["string", "null"] },
+                "amortizedAcrossRuns": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "frozenInputs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "freezeRecordSha256",
+        "evaluatorSha256",
+        "scoringConfigSha256",
+        "costsConfigSha256",
+        "benchmarkEngineSha256",
+        "promptSha256",
+        "experimentConfigSha256",
+        "runSchemaSha256",
+        "reportSchemaSha256"
+      ],
+      "properties": {
+        "freezeRecordSha256": {
+          "type": ["string", "null"],
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "evaluatorSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "scoringConfigSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "costsConfigSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "benchmarkEngineSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "promptSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "experimentConfigSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "runSchemaSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "reportSchemaSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "execution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "order",
+        "startedAt",
+        "endedAt",
+        "elapsedSeconds",
+        "productiveSeconds",
+        "queueSeconds",
+        "modelId",
+        "modelBuildId",
+        "agentVersion",
+        "agentBuildId",
+        "reasoningEffort",
+        "toolCalls",
+        "inputTokens",
+        "cachedInputTokens",
+        "outputTokens",
+        "reasoningTokens",
+        "estimatedCostUsd",
+        "specAuthoringCostUsd",
+        "firstGreenBuildSeconds",
+        "firstPassingSuiteSeconds",
+        "reworkCount",
+        "scopeChurnFiles"
+      ],
+      "properties": {
+        "status": {
+          "enum": ["completed", "failed", "cancelled"]
+        },
+        "order": { "type": "integer", "minimum": 1 },
+        "startedAt": { "type": "string", "format": "date-time" },
+        "endedAt": { "type": "string", "format": "date-time" },
+        "elapsedSeconds": { "type": "number", "minimum": 0 },
+        "productiveSeconds": { "type": ["number", "null"], "minimum": 0 },
+        "queueSeconds": { "type": ["number", "null"], "minimum": 0 },
+        "modelId": { "type": ["string", "null"] },
+        "modelBuildId": { "type": ["string", "null"] },
+        "agentVersion": { "type": "string", "minLength": 1 },
+        "agentBuildId": { "type": ["string", "null"] },
+        "reasoningEffort": { "type": ["string", "null"] },
+        "toolCalls": { "type": "integer", "minimum": 0 },
+        "inputTokens": { "type": ["integer", "null"], "minimum": 0 },
+        "cachedInputTokens": {
+          "type": ["integer", "null"],
+          "minimum": 0
+        },
+        "outputTokens": { "type": ["integer", "null"], "minimum": 0 },
+        "reasoningTokens": {
+          "type": ["integer", "null"],
+          "minimum": 0
+        },
+        "estimatedCostUsd": {
+          "type": ["number", "null"],
+          "minimum": 0
+        },
+        "specAuthoringCostUsd": {
+          "type": ["number", "null"],
+          "minimum": 0
+        },
+        "firstGreenBuildSeconds": {
+          "type": ["integer", "null"],
+          "minimum": 0
+        },
+        "firstPassingSuiteSeconds": {
+          "type": ["integer", "null"],
+          "minimum": 0
+        },
+        "reworkCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "scopeChurnFiles": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "commit",
+        "diffPath",
+        "diffSha256",
+        "bundlePath",
+        "bundleSha256"
+      ],
+      "properties": {
+        "commit": { "type": ["string", "null"] },
+        "diffPath": { "type": "string", "minLength": 1 },
+        "diffSha256": {
+          "type": ["string", "null"],
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "bundlePath": { "type": "string", "minLength": 1 },
+        "bundleSha256": {
+          "type": ["string", "null"],
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "directory",
+        "transcriptPath",
+        "transcriptSha256",
+        "evaluatorPath",
+        "evaluatorSha256"
+      ],
+      "properties": {
+        "directory": { "type": "string", "minLength": 1 },
+        "transcriptPath": { "type": "string", "minLength": 1 },
+        "transcriptSha256": {
+          "type": ["string", "null"],
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "evaluatorPath": { "type": "string", "minLength": 1 },
+        "evaluatorSha256": {
+          "type": ["string", "null"],
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "dataKind": { "const": "measured" } } },
+      "then": {
+        "properties": {
+          "benchmarkVersion": { "not": { "const": "unfrozen" } },
+          "model": {
+            "properties": { "buildId": { "type": "string", "minLength": 1 } }
+          },
+          "frozenInputs": {
+            "properties": {
+              "freezeRecordSha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              }
+            }
+          },
+          "execution": {
+            "properties": {
+              "modelId": { "type": "string", "minLength": 1 },
+              "modelBuildId": { "type": "string", "minLength": 1 },
+              "agentBuildId": { "type": "string", "minLength": 1 },
+              "productiveSeconds": { "type": "number", "minimum": 0 },
+              "queueSeconds": { "type": "number", "minimum": 0 },
+              "inputTokens": { "type": "integer", "minimum": 0 },
+              "cachedInputTokens": { "type": "integer", "minimum": 0 },
+              "outputTokens": { "type": "integer", "minimum": 0 },
+              "reasoningTokens": { "type": "integer", "minimum": 0 }
+            }
+          },
+          "source": {
+            "properties": {
+              "commit": { "type": "string", "minLength": 1 },
+              "diffSha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              },
+              "bundleSha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              }
+            }
+          },
+          "evidence": {
+            "properties": {
+              "transcriptSha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              },
+              "evaluatorSha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "laneId": { "const": "mai-spec" } } },
+      "then": {
+        "properties": {
+          "inputMode": { "const": "spec" },
+          "spec": { "type": "object" },
+          "model": {
+            "properties": {
+              "tier": { "const": "mai" },
+              "id": { "const": "mai-code-1.1-flash" }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "laneId": { "const": "opus-raw" } } },
+      "then": {
+        "properties": {
+          "inputMode": { "const": "raw" },
+          "spec": { "type": "null" },
+          "model": {
+            "properties": {
+              "tier": { "const": "opus" },
+              "id": { "const": "claude-opus-5" }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

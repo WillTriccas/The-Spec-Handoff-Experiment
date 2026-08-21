@@ -1,0 +1,2 @@
+trade_id,account,instrument,quantity,settlement_date,currency,reasons,position_id,settlement_id
+T-1001,ACC-001,IBM.N,100,2025-03-17,USD,DuplicateTradeId,,

@@ -1,0 +1,7 @@
+{
+  "problemStatement": "Describe the problem in business terms: who is affected and why the status quo is insufficient.",
+  "goals": ["Outcome the change must achieve"],
+  "nonGoals": ["Explicitly out of scope so reviewers do not assume coverage"],
+  "successMetrics": ["Observable signal that proves the goal was met"],
+  "stakeholders": ["Role or team who must approve or is impacted"]
+}

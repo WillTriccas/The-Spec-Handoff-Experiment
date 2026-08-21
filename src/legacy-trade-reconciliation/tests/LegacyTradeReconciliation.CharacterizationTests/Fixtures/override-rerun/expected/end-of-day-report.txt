@@ -1,0 +1,17 @@
+Legacy Trade Reconciliation - End Of Day Report
+Business Date: 2025-03-17
+
+Totals
+------
+Trades Read: 5
+Canonical Trades: 4
+Matched: 2
+Manual Override Matched: 1
+Manual Override Suppressed: 1
+Open Breaks: 1
+Duplicate Trades: 1
+Stale Overrides: 0
+
+Open Break Reasons
+------------------
+DuplicateTradeId: 1

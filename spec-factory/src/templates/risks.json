@@ -1,0 +1,11 @@
+{
+  "items": [
+    {
+      "id": "RISK-1",
+      "description": "State the risk.",
+      "likelihood": "medium",
+      "impact": "medium",
+      "mitigation": "State the mitigation or contingency plan."
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "items": [
+    {
+      "id": "REQ-1",
+      "statement": "State a single, testable functional requirement.",
+      "rationale": "Why this requirement exists (link back to intent goals or discovery constraints).",
+      "testable": true
+    }
+  ]
+}

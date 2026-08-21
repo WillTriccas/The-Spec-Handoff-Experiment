@@ -1,0 +1,23 @@
+{
+  "schemaVersion": "baseline-provenance/1.0.0",
+  "sourceRepository": "https://github.com/WillTriccas/The-Spec-Advantage-Demo",
+  "sourceCommit": "05547458aeb09d651237fa521459d742e1d36e85",
+  "baselines": [
+    {
+      "episodeId": "modernization",
+      "path": "src/legacy-trade-reconciliation",
+      "tag": "baseline-legacy-trade-reconciliation-v1",
+      "commit": "5428bd2902e8f4c2027274a64a38651d459a676e",
+      "sourceContentSha256": "209c028929088c1695b9f00b4d10f3dd8c0e3217f9d41122301358f5927158a2",
+      "tagContentSha256": "209c028929088c1695b9f00b4d10f3dd8c0e3217f9d41122301358f5927158a2"
+    },
+    {
+      "episodeId": "audit-feature",
+      "path": "src/canonical-modernized",
+      "tag": "baseline-canonical-modernized-v1",
+      "commit": "5428bd2902e8f4c2027274a64a38651d459a676e",
+      "sourceContentSha256": "82ff4d70d1423d45cb25e2d714355500d22b31eb6c8f47c5f5f246d4f4662120",
+      "tagContentSha256": "82ff4d70d1423d45cb25e2d714355500d22b31eb6c8f47c5f5f246d4f4662120"
+    }
+  ]
+}

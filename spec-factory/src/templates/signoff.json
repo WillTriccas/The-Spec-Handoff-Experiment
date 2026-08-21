@@ -1,0 +1,25 @@
+{
+  "reviewers": [
+    { "name": "Reviewer name", "role": "e.g. Tech Lead", "verdict": "approve" }
+  ],
+  "decision": "rejected",
+  "decidedAt": "1970-01-01T00:00:00Z",
+  "notes": "Summarize the review outcome and any conditions of approval.",
+  "authors": [
+    { "name": "Author name", "role": "e.g. Staff Engineer" }
+  ],
+  "blindnessAttestation": {
+    "attested": false,
+    "statement": "Attest that the authors listed above had no access to the benchmark's hidden evaluator rubric, evaluator JSON schema, or scoring weights before or during authoring of this spec."
+  },
+  "authoringEffort": {
+    "elapsedMinutes": 0,
+    "uncachedInputTokens": null,
+    "cachedInputTokens": null,
+    "outputTokens": null,
+    "reasoningTokens": null,
+    "estimatedCostUsd": null,
+    "costEvidenceRef": null,
+    "costMethod": null
+  }
+}

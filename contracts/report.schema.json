@@ -1,0 +1,478 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/WillTriccas/The-Spec-Handoff-Experiment/contracts/report.schema.json",
+  "title": "Benchmark evidence report",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "metadata", "overallClaim", "episodes"],
+  "properties": {
+    "schemaVersion": { "const": "1.1.0" },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "benchmarkVersion",
+        "generatedAt",
+        "dataKind",
+        "evidenceQualification",
+        "repetitionsPerLane",
+        "executionPolicy",
+        "pricingAsOf",
+        "rateType",
+        "frozenInputs",
+        "frozenVersions"
+      ],
+      "properties": {
+        "benchmarkVersion": { "type": "string", "minLength": 1 },
+        "generatedAt": { "type": "string", "format": "date-time" },
+        "dataKind": { "enum": ["illustrative", "measured"] },
+        "evidenceQualification": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["level", "limitation"],
+          "properties": {
+            "level": {
+              "enum": ["illustrative", "bounded-measured", "strict-measured"]
+            },
+            "limitation": { "type": "string", "minLength": 1 }
+          }
+        },
+        "repetitionsPerLane": { "type": "integer", "minimum": 1 },
+        "executionPolicy": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["timeoutSeconds", "toolCallCap", "completionBoundary"],
+          "properties": {
+            "timeoutSeconds": { "type": "null" },
+            "toolCallCap": { "type": "null" },
+            "completionBoundary": {
+              "const": "run-until-completed-failed-or-cancelled"
+            }
+          }
+        },
+        "pricingAsOf": { "type": ["string", "null"] },
+        "rateType": {
+          "enum": ["list", "negotiated", "internal-chargeback", "unavailable"]
+        },
+        "frozenInputs": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "freezeRecordSha256",
+            "evaluatorSha256",
+            "scoringConfigSha256",
+            "costsConfigSha256",
+            "benchmarkEngineSha256",
+            "promptSha256s",
+            "experimentConfigSha256",
+            "runSchemaSha256",
+            "reportSchemaSha256",
+            "claimRule"
+          ],
+          "properties": {
+            "freezeRecordSha256": { "type": ["string", "null"] },
+            "evaluatorSha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "scoringConfigSha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "costsConfigSha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "benchmarkEngineSha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "promptSha256s": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              },
+              "uniqueItems": true
+            },
+            "experimentConfigSha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "runSchemaSha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "reportSchemaSha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "claimRule": { "type": "object" }
+          }
+        },
+        "frozenVersions": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "uniqueItems": true
+        }
+      }
+    },
+    "overallClaim": { "$ref": "#/$defs/claim" },
+    "episodes": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/episode" }
+    }
+  },
+  "$defs": {
+    "claim": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "qualityVerdict",
+        "timeVerdict",
+        "tokenVerdict",
+        "efficiencyVerdict",
+        "drivingMetric",
+        "qualityDelta",
+        "productiveTimeDeltaSeconds",
+        "implementationTokenDelta",
+        "costSavingPercent",
+        "message"
+      ],
+      "properties": {
+        "status": {
+          "enum": [
+            "supported",
+            "inconclusive",
+            "not-supported",
+            "not-evaluated"
+          ]
+        },
+        "qualityVerdict": {
+          "enum": ["better", "equivalent", "worse", "indeterminate"]
+        },
+        "efficiencyVerdict": {
+          "enum": ["better", "equivalent", "worse", "unavailable"]
+        },
+        "timeVerdict": {
+          "enum": ["better", "equivalent", "worse", "unavailable"]
+        },
+        "tokenVerdict": {
+          "enum": ["better", "equivalent", "worse", "unavailable"]
+        },
+        "drivingMetric": {
+          "enum": ["time-and-tokens", "unavailable"]
+        },
+        "qualityDelta": { "type": ["number", "null"] },
+        "productiveTimeDeltaSeconds": { "type": ["number", "null"] },
+        "implementationTokenDelta": { "type": ["number", "null"] },
+        "costSavingPercent": { "type": ["number", "null"] },
+        "message": { "type": "string", "minLength": 1 }
+      }
+    },
+    "scoreBreakdown": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "functionalCorrectness",
+        "behaviorPreservation",
+        "securityControls",
+        "maintainability",
+        "operability",
+        "scopeTraceability"
+      ],
+      "properties": {
+        "functionalCorrectness": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "behaviorPreservation": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "securityControls": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "maintainability": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "operability": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "scopeTraceability": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        }
+      }
+    },
+    "hardGate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "applicable", "status", "reason"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "applicable": { "type": "boolean" },
+        "status": { "enum": ["passed", "failed", "not-applicable"] },
+        "reason": { "type": ["string", "null"] }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "applicable": { "const": false } } },
+          "then": {
+            "properties": { "status": { "const": "not-applicable" } }
+          }
+        },
+        {
+          "if": { "properties": { "applicable": { "const": true } } },
+          "then": {
+            "properties": { "status": { "enum": ["passed", "failed"] } }
+          }
+        }
+      ]
+    },
+    "run": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "runId",
+        "dataKind",
+        "laneId",
+        "modelDisplayName",
+        "inputMode",
+        "repetition",
+        "status",
+        "qualityScore",
+        "hardGates",
+        "hardGatesPassed",
+        "scores",
+        "elapsedSeconds",
+        "productiveSeconds",
+        "queueSeconds",
+        "toolCalls",
+        "inputTokens",
+        "cachedInputTokens",
+        "outputTokens",
+        "reasoningTokens",
+        "estimatedCostUsd",
+        "specAuthoringAmortizedCostUsd",
+        "specAuthoringAmortizedTokens",
+        "specAuthoringAmortizedSeconds",
+        "evidencePath"
+      ],
+      "properties": {
+        "runId": { "type": "string", "minLength": 1 },
+        "dataKind": { "enum": ["illustrative", "measured"] },
+        "laneId": { "type": "string", "minLength": 1 },
+        "modelDisplayName": { "type": "string", "minLength": 1 },
+        "inputMode": { "enum": ["raw", "spec"] },
+        "repetition": { "type": "integer", "minimum": 1 },
+        "status": {
+          "enum": ["completed", "failed", "cancelled"]
+        },
+        "qualityScore": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "hardGates": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/hardGate" }
+        },
+        "hardGatesPassed": { "type": "boolean" },
+        "scores": { "$ref": "#/$defs/scoreBreakdown" },
+        "elapsedSeconds": { "type": "number", "minimum": 0 },
+        "productiveSeconds": { "type": ["number", "null"], "minimum": 0 },
+        "queueSeconds": { "type": ["number", "null"], "minimum": 0 },
+        "toolCalls": { "type": "integer", "minimum": 0 },
+        "inputTokens": { "type": ["integer", "null"], "minimum": 0 },
+        "cachedInputTokens": {
+          "type": ["integer", "null"],
+          "minimum": 0
+        },
+        "outputTokens": { "type": ["integer", "null"], "minimum": 0 },
+        "reasoningTokens": {
+          "type": ["integer", "null"],
+          "minimum": 0
+        },
+        "estimatedCostUsd": {
+          "type": ["number", "null"],
+          "minimum": 0
+        },
+        "specAuthoringAmortizedCostUsd": {
+          "type": ["number", "null"],
+          "minimum": 0
+        },
+        "specAuthoringAmortizedTokens": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "specAuthoringAmortizedSeconds": {
+          "type": "number",
+          "minimum": 0
+        },
+        "evidencePath": { "type": "string", "minLength": 1 }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "enum": ["failed", "cancelled"]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "qualityScore": { "const": 0 },
+              "hardGatesPassed": { "const": false }
+            }
+          }
+        }
+      ]
+    },
+    "laneSummary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "laneId",
+        "modelDisplayName",
+        "inputMode",
+        "qualityMedian",
+        "qualityMin",
+        "qualityMax",
+        "hardGatePassCount",
+        "hardGateFailCount",
+        "runCount",
+        "elapsedMedianSeconds",
+        "productiveMedianSeconds",
+        "endToEndProductiveMedianSeconds",
+        "tokenMedian",
+        "uncachedInputTokenMedian",
+        "cachedInputTokenMedian",
+        "outputTokenMedian",
+        "reasoningTokenMedian",
+        "implementationTokenMedian",
+        "endToEndTokenMedian",
+        "costMedianUsd"
+      ],
+      "properties": {
+        "laneId": { "type": "string", "minLength": 1 },
+        "modelDisplayName": { "type": "string", "minLength": 1 },
+        "inputMode": { "enum": ["raw", "spec"] },
+        "qualityMedian": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "qualityMin": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "qualityMax": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "hardGatePassCount": { "type": "integer", "minimum": 0 },
+        "hardGateFailCount": { "type": "integer", "minimum": 0 },
+        "runCount": { "type": "integer", "minimum": 1 },
+        "elapsedMedianSeconds": { "type": "number", "minimum": 0 },
+        "productiveMedianSeconds": {
+          "type": ["number", "null"],
+          "minimum": 0
+        },
+        "endToEndProductiveMedianSeconds": {
+          "type": ["number", "null"],
+          "minimum": 0
+        },
+        "tokenMedian": { "type": ["number", "null"], "minimum": 0 },
+        "uncachedInputTokenMedian": { "type": ["number", "null"], "minimum": 0 },
+        "cachedInputTokenMedian": { "type": ["number", "null"], "minimum": 0 },
+        "outputTokenMedian": { "type": ["number", "null"], "minimum": 0 },
+        "reasoningTokenMedian": { "type": ["number", "null"], "minimum": 0 },
+        "implementationTokenMedian": { "type": ["number", "null"], "minimum": 0 },
+        "endToEndTokenMedian": { "type": ["number", "null"], "minimum": 0 },
+        "costMedianUsd": {
+          "type": ["number", "null"],
+          "minimum": 0
+        }
+      }
+    },
+    "episode": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "claim", "laneSummaries", "runs"],
+      "properties": {
+        "id": { "enum": ["modernization", "audit-feature"] },
+        "name": { "type": "string", "minLength": 1 },
+        "claim": { "$ref": "#/$defs/claim" },
+        "laneSummaries": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/laneSummary" }
+        },
+        "runs": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/run" }
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "metadata": {
+            "properties": { "dataKind": { "const": "measured" } }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "metadata": {
+            "properties": {
+              "benchmarkVersion": { "not": { "const": "unfrozen" } },
+              "frozenInputs": {
+                "properties": {
+                  "freezeRecordSha256": {
+                    "type": "string",
+                    "pattern": "^[a-f0-9]{64}$"
+                  }
+                }
+              },
+              "frozenVersions": { "minItems": 1 }
+            }
+          },
+          "episodes": {
+            "items": {
+              "properties": {
+                "runs": {
+                  "items": {
+                    "properties": {
+                      "dataKind": { "const": "measured" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}
