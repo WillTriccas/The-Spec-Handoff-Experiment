@@ -150,7 +150,8 @@ export async function evaluateModernization(candidateRoot, options) {
 export async function collectOutputs(
   outputDirectory,
   declaredOutputs,
-  boundOutputDirectory = null
+  boundOutputDirectory = null,
+  businessDate = MODERNIZATION_BUSINESS_DATE
 ) {
   const files = {};
   const outputStat = await fs.lstat(outputDirectory);
@@ -167,7 +168,7 @@ export async function collectOutputs(
   const containmentRoot = boundOutputDirectory ?? realOutputDirectory;
   for (const declared of declaredOutputs) {
     const relative = declared
-      .replaceAll('{businessDate}', MODERNIZATION_BUSINESS_DATE)
+      .replaceAll('{businessDate}', businessDate)
       .replaceAll('\\', '/');
     const resolved = resolveInside(outputDirectory, relative, `declared output "${relative}"`);
     try {

@@ -3,12 +3,26 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { test } from 'node:test';
+import { fileURLToPath } from 'node:url';
 import { spawnCommand } from '../src/commands.js';
 import { main } from '../src/cli.js';
 import { evaluateAuditFeature } from '../src/audit.js';
+import {
+  AUDIT_RECONCILIATION_BUSINESS_DATE,
+  AUDIT_RECONCILIATION_FILES,
+  writeAuditReconciliationFixture
+} from '../src/audit-fixtures.js';
 import { collectOutputs, evaluateModernization } from '../src/modernization.js';
+import { runOverrideSuppressionHarness } from '../src/override-harness.js';
 import { validateModernizationAdapter } from '../src/schema.js';
 import { parseDependencyFindings, parseDotnetVulnerabilityFindings, parseNpmAuditFindings, runStaticChecks } from '../src/static-checks.js';
+
+const REPO_ROOT = path.resolve(
+  path.dirname(fileURLToPath(import.meta.url)),
+  '..',
+  '..'
+);
+const CANONICAL_BASELINE = path.join(REPO_ROOT, 'src', 'canonical-modernized');
 
 test('modernization evaluator passes a schema-valid candidate that preserves hidden invariants', async () => {
   const candidate = await makeCandidate('modernization-pass');
@@ -139,6 +153,27 @@ test('declared outputs reject replacement of the evaluator-owned output director
   );
 });
 
+test('audit reconciliation fixture uses the canonical-modernized CSV contract', () => {
+  assert.equal(AUDIT_RECONCILIATION_BUSINESS_DATE, '2026-02-17');
+  assert.equal(
+    AUDIT_RECONCILIATION_FILES['trades.csv'].split('\n')[0],
+    'BusinessDate,TradeId,Account,Instrument,Quantity,Direction,SettlementDate,Currency,Amount'
+  );
+  assert.equal(
+    AUDIT_RECONCILIATION_FILES['settlements.csv'].split('\n')[0],
+    'BusinessDate,SettlementId,TradeId,Account,Instrument,Quantity,Direction,SettlementDate,Currency,Amount'
+  );
+  assert.equal(
+    AUDIT_RECONCILIATION_FILES['positions.csv'].split('\n')[0],
+    'BusinessDate,Account,Instrument,Currency,NetQuantity'
+  );
+  assert.ok(
+    Object.values(AUDIT_RECONCILIATION_FILES).every(
+      (content) => !content.split('\n')[0].includes('_')
+    )
+  );
+});
+
 test('audit evaluator passes maker-checker, idempotency, conflict, export, and sentinel checks', async () => {
   const candidate = await makeCandidate('audit-pass');
   await writeBenchmarkAdapter(candidate);
@@ -202,18 +237,121 @@ test('audit evaluator passes maker-checker, idempotency, conflict, export, and s
     }
   `);
 
-  const evidence = await evaluateAuditFeature(candidate, {});
+  const evidence = await evaluateMockAudit(candidate);
   assert.equal(evidence.outcome, 'passed', JSON.stringify(evidence.gates, null, 2));
   assert.equal(evidence.gates['maker-checker-separation'].passed, true);
   assert.equal(evidence.gates['audit-integrity'].passed, true);
 });
+
+test('audit evaluator fails when override suppression is not positively proved', async () => {
+  const candidate = await makeCandidate('audit-override-harness-fails');
+  await writeAuditAdapter(candidate);
+  await writeAuditRunner(candidate);
+
+  const evidence = await evaluateAuditFeature(candidate, {
+    overrideHarness: async () => ({
+      passed: false,
+      build: null,
+      execution: null,
+      evidence: {
+        schemaVersion: 'override-suppression-evidence/1.0.0',
+        passed: false,
+        suppressedBreakStatus: 'Open',
+        idempotent: true,
+        failures: ['seeded manual override did not mark the target break Overridden']
+      },
+      failure: 'seeded manual override did not mark the target break Overridden'
+    })
+  });
+  assert.equal(evidence.outcome, 'failed');
+  assert.equal(evidence.gates['essential-business-invariants'].passed, false);
+  assert.match(
+    evidence.gates['essential-business-invariants'].findings.join('\n'),
+    /did not mark the target break Overridden/
+  );
+});
+
+test(
+  'unchanged canonical baseline passes the audit fixture and evaluator-owned override harness',
+  { timeout: 180_000 },
+  async () => {
+    const candidate = await copyCanonicalCandidate('audit-canonical-integration');
+    try {
+      await writeAuditAdapter(candidate, { preserveBenchmark: true });
+      await writeAuditRunner(candidate);
+      const evidence = await evaluateAuditFeature(candidate, {});
+      assert.equal(evidence.outcome, 'passed', JSON.stringify(evidence, null, 2));
+      assert.equal(evidence.gates['essential-business-invariants'].passed, true);
+      assert.equal(evidence.overrideSuppression?.passed, true);
+      assert.equal(
+        evidence.overrideSuppression?.suppressedBreakStatus,
+        'Overridden'
+      );
+      assert.equal(evidence.overrideSuppression?.idempotent, true);
+      assert.ok(
+        evidence.commands.some(
+          (entry) =>
+            entry.id === 'application-run-canonical-fixture' &&
+            entry.exitCode === 2 &&
+            entry.passed
+        )
+      );
+    } finally {
+      await fs.rm(candidate, { recursive: true, force: true });
+    }
+  }
+);
+
+test(
+  'override harness fails a candidate that ignores seeded overrides',
+  { timeout: 120_000 },
+  async () => {
+    const candidate = await copyCanonicalCandidate('audit-override-negative');
+    const temporaryRoot = await fs.mkdtemp(
+      path.join(os.tmpdir(), 'sealed-override-negative-')
+    );
+    try {
+      const enginePath = path.join(
+        candidate,
+        'src',
+        'TradeRecon.Application',
+        'Reconciliation',
+        'ReconciliationEngine.cs'
+      );
+      const engine = await fs.readFile(enginePath, 'utf8');
+      assert.match(engine, /overriddenBreakKeys\.Contains\(b\.BreakKey\)/);
+      await fs.writeFile(
+        enginePath,
+        engine.replace(
+          'overriddenBreakKeys.Contains(b.BreakKey)',
+          'false'
+        )
+      );
+      const fixtureDirectory = path.join(temporaryRoot, 'fixtures');
+      await writeAuditReconciliationFixture(fixtureDirectory);
+      const result = await runOverrideSuppressionHarness({
+        candidateRoot: candidate,
+        fixtureDirectory,
+        businessDate: AUDIT_RECONCILIATION_BUSINESS_DATE,
+        temporaryRoot
+      });
+      assert.equal(result.passed, false);
+      assert.equal(result.execution?.exitCode, 2);
+      assert.equal(result.evidence?.suppressedBreakStatus, 'Open');
+      assert.match(result.failure, /did not mark the target break Overridden/);
+    } finally {
+      await fs.rm(candidate, { recursive: true, force: true });
+      await fs.rm(temporaryRoot, { recursive: true, force: true });
+    }
+  }
+);
 
 test('audit evaluator fails when export shows proposer became durable approver despite safe stdout', async () => {
   const candidate = await makeCandidate('audit-self-approval-export');
   await writeAuditAdapter(candidate);
   await writeAuditRunner(candidate, { durableSelfApproval: true });
 
-  const evidence = await evaluateAuditFeature(candidate, {});
+  const evidence = await evaluateMockAudit(candidate);
   assert.equal(evidence.outcome, 'failed');
   assert.equal(evidence.gates['maker-checker-separation'].passed, false);
   assert.match(evidence.gates['maker-checker-separation'].findings.join('\n'), /proposer as durable approver/);
@@ -224,7 +362,7 @@ test('audit evaluator fails when a durable final decision uses an unrecognized a
   await writeAuditAdapter(candidate);
   await writeAuditRunner(candidate, { unrecognizedSelfApprovalFinal: true });
 
-  const evidence = await evaluateAuditFeature(candidate, {});
+  const evidence = await evaluateMockAudit(candidate);
   assert.equal(evidence.outcome, 'failed');
   assert.equal(evidence.gates['maker-checker-separation'].passed, false);
   assert.match(evidence.gates['maker-checker-separation'].findings.join('\n'), /exactly one durable final decision for REQ-A/);
@@ -235,7 +373,7 @@ test('audit evaluator fails when concurrent conflict leaves two durable final de
   await writeAuditAdapter(candidate);
   await writeAuditRunner(candidate, { allowTwoConflictFinals: true });
 
-  const evidence = await evaluateAuditFeature(candidate, {});
+  const evidence = await evaluateMockAudit(candidate);
   assert.equal(evidence.outcome, 'failed');
   assert.equal(evidence.gates['audit-integrity'].passed, false);
   assert.match(evidence.gates['audit-integrity'].findings.join('\n'), /exactly one durable final decision/);
@@ -246,7 +384,7 @@ test('audit evaluator fails when a crashing conflict command is the only conflic
   await writeAuditAdapter(candidate, { decideExitCodes: [0] });
   await writeAuditRunner(candidate, { crashConflictLoser: true });
 
-  const evidence = await evaluateAuditFeature(candidate, {});
+  const evidence = await evaluateMockAudit(candidate);
   assert.equal(evidence.outcome, 'failed');
   assert.equal(evidence.gates['audit-integrity'].passed, false);
   assert.match(evidence.gates['audit-integrity'].findings.join('\n'), /conflict commands did not complete/);
@@ -257,7 +395,7 @@ test('audit evaluator fails when an invalid proposal is silently ignored', async
   await writeAuditAdapter(candidate);
   await writeAuditRunner(candidate, { ignoreInvalidProposal: true });
 
-  const evidence = await evaluateAuditFeature(candidate, {});
+  const evidence = await evaluateMockAudit(candidate);
   assert.equal(evidence.outcome, 'failed');
   assert.equal(evidence.gates['essential-business-invariants'].passed, false);
   assert.match(
@@ -271,7 +409,7 @@ test('audit evaluator sets build gate from the real benchmark build command', as
   await writeAuditAdapter(candidate, { benchmark: { buildArguments: ['-e', 'process.exit(7)'] } });
   await writeAuditRunner(candidate);
 
-  const evidence = await evaluateAuditFeature(candidate, {});
+  const evidence = await evaluateMockAudit(candidate);
   assert.equal(evidence.outcome, 'failed');
   assert.equal(evidence.gates.build.passed, false);
   assert.equal(evidence.commands.find((entry) => entry.id === 'application-build').passed, false);
@@ -282,7 +420,7 @@ test('audit evaluator folds benchmark test failures into essential-business-inva
   await writeAuditAdapter(candidate, { benchmark: { testArguments: ['-e', 'process.exit(8)'] } });
   await writeAuditRunner(candidate);
 
-  const evidence = await evaluateAuditFeature(candidate, {});
+  const evidence = await evaluateMockAudit(candidate);
   assert.equal(evidence.outcome, 'failed');
   assert.equal(evidence.gates.build.passed, true);
   assert.equal(evidence.gates['essential-business-invariants'].passed, false);
@@ -293,7 +431,7 @@ test('audit evaluator detects sentinel disclosure before evidence redaction', as
   const candidate = await makeCandidate('audit-sentinel-leak');
   await writeAuditAdapter(candidate);
   await writeAuditRunner(candidate, { leakSentinel: true });
-  const evidence = await evaluateAuditFeature(candidate, {});
+  const evidence = await evaluateMockAudit(candidate);
   assert.equal(evidence.gates['audit-integrity'].passed, false);
   assert.match(evidence.gates['audit-integrity'].findings.join('\n'), /exposed synthetic sentinel/);
   assert.doesNotMatch(JSON.stringify(evidence), /ACCT-SENTINEL-9f6e3a21/);
@@ -474,6 +612,15 @@ async function makeCandidate(name) {
   return await fs.mkdtemp(path.join(os.tmpdir(), `sealed-evaluator-${name}-`));
 }
 
+async function copyCanonicalCandidate(name) {
+  const candidate = await makeCandidate(name);
+  await fs.cp(CANONICAL_BASELINE, candidate, {
+    recursive: true,
+    filter: (source) => !['bin', 'obj', 'TestResults'].includes(path.basename(source))
+  });
+  return candidate;
+}
+
 async function writeModernizationPassingRunner(candidate) {
   await fs.writeFile(path.join(candidate, 'modernization-runner.mjs'), `
     import fs from 'node:fs';
@@ -502,7 +649,9 @@ async function writeModernizationPassingRunner(candidate) {
 }
 
 async function writeAuditAdapter(candidate, options = {}) {
-  await writeBenchmarkAdapter(candidate, options.benchmark ?? {});
+  if (options.preserveBenchmark !== true) {
+    await writeBenchmarkAdapter(candidate, options.benchmark ?? {});
+  }
   await fs.writeFile(path.join(candidate, 'audit-adapter.json'), JSON.stringify({
     schemaVersion: '1.0.0',
     workingDirectory: '.',
@@ -514,15 +663,88 @@ async function writeAuditAdapter(candidate, options = {}) {
 }
 
 async function writeBenchmarkAdapter(candidate, options = {}) {
-  await writeModernizationPassingRunner(candidate);
+  await writeCanonicalPassingRunner(candidate);
   await fs.writeFile(path.join(candidate, 'benchmark-adapter.json'), JSON.stringify({
     schemaVersion: '1.0.0',
     workingDirectory: '.',
     build: command(process.execPath, options.buildArguments ?? ['-e', '']),
     test: command(process.execPath, options.testArguments ?? ['-e', '']),
-    run: command(process.execPath, ['modernization-runner.mjs', '{businessDate}', '{inputDirectory}', '{outputDirectory}']),
-    outputs: ['matched-trades.csv', 'break-queue.csv', 'end-of-day-report.txt']
+    run: command(
+      process.execPath,
+      ['canonical-runner.mjs', '{businessDate}', '{inputDirectory}', '{outputDirectory}'],
+      [0, 2]
+    ),
+    outputs: [
+      '{businessDate}/eod-summary.txt',
+      '{businessDate}/eod-break-register.csv',
+      '{businessDate}/eod-result.json'
+    ]
   }, null, 2));
+}
+
+async function writeCanonicalPassingRunner(candidate) {
+  await fs.writeFile(path.join(candidate, 'canonical-runner.mjs'), `
+    import fs from 'node:fs';
+    import path from 'node:path';
+    const businessDate = process.argv[2];
+    const outputRoot = process.argv[4];
+    const output = path.join(outputRoot, businessDate);
+    fs.mkdirSync(output, { recursive: true });
+    fs.writeFileSync(path.join(output, 'eod-summary.txt'), 'BREAKS OUTSTANDING\\n');
+    fs.writeFileSync(
+      path.join(output, 'eod-break-register.csv'),
+      'BusinessDate,BreakKey,Type,Status,Account,Instrument,Currency,TradeId,SettlementId,Difference,Detail\\n'
+    );
+    fs.writeFileSync(path.join(output, 'eod-result.json'), JSON.stringify({
+      schemaVersion: '1.0',
+      businessDate,
+      status: 'BreaksOutstanding',
+      tradeCount: 7,
+      settlementCount: 7,
+      positionCount: 7,
+      matchCount: 2,
+      openBreakCount: 7,
+      overriddenBreakCount: 0,
+      openBreakCountsByType: {
+        AmountMismatch: 1,
+        DirectionMismatch: 1,
+        MissingSettlement: 1,
+        MissingTrade: 1,
+        PositionMismatch: 1,
+        QuantityMismatch: 1,
+        SettlementDateMismatch: 1
+      },
+      breaks: [
+        'AmountMismatch',
+        'DirectionMismatch',
+        'MissingSettlement',
+        'MissingTrade',
+        'PositionMismatch',
+        'QuantityMismatch',
+        'SettlementDateMismatch'
+      ].map((type) => ({ type, status: 'Open' })),
+      matches: [{}, {}]
+    }, null, 2));
+    process.exit(2);
+  `);
+}
+
+async function evaluateMockAudit(candidate) {
+  return await evaluateAuditFeature(candidate, {
+    overrideHarness: async () => ({
+      passed: true,
+      build: null,
+      execution: null,
+      evidence: {
+        schemaVersion: 'override-suppression-evidence/1.0.0',
+        passed: true,
+        suppressedBreakStatus: 'Overridden',
+        idempotent: true,
+        failures: []
+      },
+      failure: null
+    })
+  });
 }
 
 async function writeAuditRunner(candidate, options = {}) {

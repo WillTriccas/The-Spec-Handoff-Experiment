@@ -45,6 +45,11 @@ export function aggregateLane(runs) {
       ? value + (runs[index].specAuthoringAmortizedTokens ?? 0)
       : null
   );
+  const endToEndProductiveSeconds = productiveSeconds.map((value, index) =>
+    typeof value === "number"
+      ? value + (runs[index].specAuthoringAmortizedSeconds ?? 0)
+      : null
+  );
   const categoryMedian = (field, fallback = null) => {
     const values = runs.map((run) => run[field] ?? (fallback ? run[fallback] : null));
     return values.every((value) => typeof value === "number") ? median(values) : null;
@@ -68,6 +73,10 @@ export function aggregateLane(runs) {
     productiveMedianSeconds: productiveSeconds.every((value) => typeof value === "number")
       ? median(productiveSeconds)
       : null,
+    endToEndProductiveMedianSeconds:
+      endToEndProductiveSeconds.every((value) => typeof value === "number")
+        ? median(endToEndProductiveSeconds)
+        : null,
     uncachedInputTokenMedian: categoryMedian("inputTokens"),
     cachedInputTokenMedian: categoryMedian("cachedInputTokens"),
     outputTokenMedian: categoryMedian("outputTokens"),

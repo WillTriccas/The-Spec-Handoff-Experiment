@@ -31,17 +31,18 @@
   },
   "claimRule": {
     "comparisonLane": "mai-spec",
-    "controlLane": "opus-spec",
+    "controlLane": "opus-raw",
     "equivalentWithinPoints": 3,
     "betterByMoreThanPoints": 3,
     "aggregation": "marginal-medians",
     "requireAllHardGates": true,
     "comparisonLaneGatesDetermineEligibility": true,
     "controlLaneGateFailuresAreReportedSeparately": true,
-    "inconclusiveWhenDeltaWithinObservedLaneSpread": true,
     "overallRollup": "weaker-episode",
     "qualityAndEfficiencyVerdictsAreSeparate": true,
-    "notes": "The headline hypothesis is supported per episode only when MAI is equivalent-or-better on quality, every MAI run passes all applicable hard gates, and MAI uses fewer median implementation tokens than Opus."
+    "requireLowerMedianProductiveTime": true,
+    "requireLowerMedianImplementationTokens": true,
+    "notes": "The headline hypothesis is supported per episode only when MAI executing the Opus-authored Spec Kit artifacts is equivalent-or-better on quality, every MAI run passes all applicable hard gates, and MAI uses both fewer median implementation tokens and less median productive execution time than Opus tackling the raw task directly."
   },
   "efficiencyRule": {
     "primaryMetrics": [
@@ -54,7 +55,8 @@
       "output",
       "reasoning"
     ],
-    "elapsedTimeIsContextOnly": true,
+    "productiveExecutionTimeIsPrimary": true,
+    "wallClockElapsedTimeIsSecondary": true,
     "queueAndThrottleTimeExcludedFromProductiveTime": true,
     "unknownCostIsUnavailable": true,
     "monetaryCostIsNotAHeadlineMetric": true

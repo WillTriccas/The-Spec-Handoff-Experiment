@@ -4,6 +4,7 @@ coverage/
 TestResults/
 bin/
 obj/
+.artifacts/
 !benchmark/bin/
 !benchmark/bin/**
 !evaluator/bin/

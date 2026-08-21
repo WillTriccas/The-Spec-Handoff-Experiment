@@ -1,7 +1,8 @@
 # Dashboard
 
 A measured-ready React dashboard bundled as one HTML file. Before execution it
-shows only the pre-registered matrix, protocol, and `not-evaluated` statuses.
+shows only the pre-registered Spec Kit versus raw-task matrix, protocol, and
+`not-evaluated` statuses.
 
 ```powershell
 npm --workspace dashboard run test

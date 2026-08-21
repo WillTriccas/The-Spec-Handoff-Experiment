@@ -11,6 +11,8 @@
   cost or environmental impact.
 - Queue and throttle time can vary independently of productive execution time and
   is reported separately.
+- With no timeout, a stalled run requires explicit cancellation; cancelled runs
+  are retained and score zero.
 - Monetary comparisons are unavailable until a dated, sourced rate card is
   frozen.
 - The public repository can enforce artifact and workspace boundaries, but the

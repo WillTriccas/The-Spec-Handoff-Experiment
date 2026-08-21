@@ -19,6 +19,32 @@ function typeOf(value) {
   return typeof value;
 }
 
+function structurallyEqual(left, right) {
+  if (Object.is(left, right)) return true;
+  if (Array.isArray(left) || Array.isArray(right)) {
+    return (
+      Array.isArray(left) &&
+      Array.isArray(right) &&
+      left.length === right.length &&
+      left.every((value, index) => structurallyEqual(value, right[index]))
+    );
+  }
+  if (
+    left &&
+    right &&
+    typeof left === "object" &&
+    typeof right === "object"
+  ) {
+    const leftKeys = Object.keys(left).sort();
+    const rightKeys = Object.keys(right).sort();
+    return (
+      structurallyEqual(leftKeys, rightKeys) &&
+      leftKeys.every((key) => structurallyEqual(left[key], right[key]))
+    );
+  }
+  return false;
+}
+
 function matchesType(value, type) {
   if (type === "integer") {
     return typeof value === "number" && Number.isInteger(value);
@@ -88,7 +114,7 @@ function validateNode(schema, value, root, path, errors) {
   }
 
   if (schema.const !== undefined) {
-    if (value !== schema.const) {
+    if (!structurallyEqual(value, schema.const)) {
       errors.push(`${path}: expected const ${JSON.stringify(schema.const)}, got ${JSON.stringify(value)}`);
     }
     return;

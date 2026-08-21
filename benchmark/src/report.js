@@ -23,14 +23,14 @@ import {
 } from "./prepare.js";
 import { validateAgainstSchema } from "./schema-lite.js";
 import {
-  assembleSpec,
-  loadBundle,
-  renderSpecMarkdown
-} from "../../spec-factory/src/bundle.js";
+  hashSpecKitBundle,
+  loadSpecKitBundle,
+  renderSpecKitBundle,
+  validateSpecKitBundle
+} from "../../spec-factory/src/spec-kit.js";
 import { assertUsableFreezeRecord } from "./freeze.js";
 import { scoreRun } from "./scoring.js";
 import { assignRandomizedOrder, buildPlannedRuns } from "./runs.js";
-import { hashBundle } from "../../spec-factory/src/hashing.js";
 
 function unique(values) {
   return [...new Set(values.filter((value) => value !== null && value !== undefined))];
@@ -98,10 +98,24 @@ export function validateMeasuredReportSet(runs, experimentConfig = loadExperimen
       );
     }
     if (
-      execution.elapsedSeconds > experimentConfig.executionPolicy.timeoutSeconds ||
-      execution.toolCalls > experimentConfig.executionPolicy.toolCallCap
+      experimentConfig.executionPolicy.timeoutSeconds !== null ||
+      experimentConfig.executionPolicy.toolCallCap !== null
     ) {
-      throw new Error(`Cannot build measured report: run ${run.runId} exceeded the frozen execution policy`);
+      throw new Error(`Cannot build measured report: run ${run.runId} does not use the no-timeout execution policy`);
+    }
+    for (const [label, value] of [
+      ["productiveSeconds", execution.productiveSeconds],
+      ["queueSeconds", execution.queueSeconds],
+      ["inputTokens", execution.inputTokens],
+      ["cachedInputTokens", execution.cachedInputTokens],
+      ["outputTokens", execution.outputTokens],
+      ["reasoningTokens", execution.reasoningTokens]
+    ]) {
+      if (typeof value !== "number" || value < 0) {
+        throw new Error(
+          `Cannot build measured report: run ${run.runId} is missing required ${label} measurement`
+        );
+      }
     }
     seenKeys.add(key);
     seenRunIds.add(run.runId);
@@ -116,10 +130,16 @@ export function validateMeasuredReportSet(runs, experimentConfig = loadExperimen
 
   for (const episode of experimentConfig.episodes) {
     const episodeRuns = runs.filter((run) => run.episodeId === episode.id);
-    const specHashes = unique(episodeRuns.map((run) => run.spec?.sha256));
-    if (specHashes.length !== 1 || !/^[a-f0-9]{64}$/.test(specHashes[0] ?? "")) {
+    const specRuns = episodeRuns.filter((run) => run.inputMode === "spec");
+    const rawRuns = episodeRuns.filter((run) => run.inputMode === "raw");
+    const specHashes = unique(specRuns.map((run) => run.spec?.sha256));
+    if (
+      specHashes.length !== 1 ||
+      !/^[a-f0-9]{64}$/.test(specHashes[0] ?? "") ||
+      rawRuns.some((run) => run.spec !== null)
+    ) {
       throw new Error(
-        `Cannot build measured report: ${episode.id} lanes do not share one approved specification hash`
+        `Cannot build measured report: ${episode.id} must bind one approved spec to mai-spec and no spec to opus-raw`
       );
     }
   }
@@ -151,9 +171,13 @@ function exactClaim(claim) {
   return {
     status: claim.status,
     qualityVerdict: claim.qualityVerdict,
+    timeVerdict: claim.timeVerdict,
+    tokenVerdict: claim.tokenVerdict,
     efficiencyVerdict: claim.efficiencyVerdict,
     drivingMetric: claim.drivingMetric,
     qualityDelta: claim.qualityDelta,
+    productiveTimeDeltaSeconds: claim.productiveTimeDeltaSeconds,
+    implementationTokenDelta: claim.implementationTokenDelta,
     costSavingPercent: claim.costSavingPercent,
     message: claim.message
   };
@@ -171,6 +195,16 @@ function amortizedTokenShare(authoringEffort, repetition) {
   const base = Math.floor(total / across);
   const remainder = total % across;
   return base + (repetition <= remainder ? 1 : 0);
+}
+
+function amortizedTimeShare(authoringEffort) {
+  const elapsed = authoringEffort?.elapsedSeconds;
+  const across = authoringEffort?.amortizedAcrossRuns;
+  return typeof elapsed === "number" &&
+    Number.isInteger(across) &&
+    across > 0
+    ? elapsed / across
+    : 0;
 }
 
 function normalizeHardGates(run) {
@@ -274,6 +308,9 @@ function normalizeReportRun(run) {
     specAuthoringAmortizedTokens:
       run.specAuthoringAmortizedTokens ??
       amortizedTokenShare(run.spec?.authoringEffort, run.repetition),
+    specAuthoringAmortizedSeconds:
+      run.specAuthoringAmortizedSeconds ??
+      amortizedTimeShare(run.spec?.authoringEffort),
     evidencePath: evidencePath ?? "evidence/illustrative"
   };
 }
@@ -285,16 +322,20 @@ function canonicalPromptHashes(experimentConfig, repoRoot) {
     const manifest = JSON.parse(
       readFileSync(path.join(repoRoot, episode.specBundle, "manifest.json"), "utf8")
     );
-    const bundle = loadBundle(path.join(repoRoot, episode.specBundle));
-    if (hashBundle(assembleSpec(bundle, { id: manifest.id })) !== manifest.sha256) {
+    const bundle = loadSpecKitBundle(path.join(repoRoot, episode.specBundle));
+    const validation = validateSpecKitBundle(bundle);
+    if (
+      !validation.valid ||
+      hashSpecKitBundle(bundle, {
+        id: manifest.id,
+        methodologyCommit: manifest.methodology?.commit
+      }) !== manifest.sha256
+    ) {
       throw new Error(
         `Cannot build measured report: ${episode.id} spec bundle no longer matches its manifest`
       );
     }
-    const renderedSpec = renderSpecMarkdown(
-      bundle,
-      { id: manifest.id, title: episode.name }
-    );
+    const renderedSpec = renderSpecKitBundle(bundle, { id: manifest.id });
     hashes.set(
       `${episode.id}|raw`,
       hashText(assemblePromptText({ briefText, inputMode: "raw" }))
@@ -352,14 +393,21 @@ export function validateSpecHashesAgainstFreeze(runs, experimentConfig, freezeRe
         `Cannot build measured report: freeze record has no approved specification hash for ${episode.id}`
       );
     }
-    const mismatched = runs.filter(
+    const mismatchedSpec = runs.filter(
       (run) =>
         run.episodeId === episode.id &&
+        run.inputMode === "spec" &&
         run.spec?.sha256 !== expectedSha256
     );
-    if (mismatched.length > 0) {
+    const rawWithSpec = runs.filter(
+      (run) =>
+        run.episodeId === episode.id &&
+        run.inputMode === "raw" &&
+        run.spec !== null
+    );
+    if (mismatchedSpec.length > 0 || rawWithSpec.length > 0) {
       throw new Error(
-        `Cannot build measured report: ${episode.id} run specification hash does not match the freeze record`
+        `Cannot build measured report: ${episode.id} spec assignment does not match the freeze record`
       );
     }
   }
@@ -428,7 +476,9 @@ function recomputeMeasuredRun(run, { scoringConfig, costsConfig, repoRoot, freez
       : null;
   const normalizedAuthoringEffort = authoringEffort
     ? {
-        elapsedSeconds: Math.round((authoringEffort.elapsedMinutes ?? 0) * 60),
+        elapsedSeconds:
+          authoringEffort.elapsedSeconds ??
+          Math.round((authoringEffort.elapsedMinutes ?? 0) * 60),
         inputTokens: authoringEffort.uncachedInputTokens ?? authoringEffort.inputTokens ?? 0,
         cachedInputTokens: authoringEffort.cachedInputTokens ?? 0,
         outputTokens: authoringEffort.outputTokens ?? 0,
@@ -493,6 +543,8 @@ function exactLaneSummary(summary) {
     runCount: summary.runCount,
     elapsedMedianSeconds: summary.elapsedMedianSeconds,
     productiveMedianSeconds: summary.productiveMedianSeconds,
+    endToEndProductiveMedianSeconds:
+      summary.endToEndProductiveMedianSeconds,
     uncachedInputTokenMedian: summary.uncachedInputTokenMedian,
     cachedInputTokenMedian: summary.cachedInputTokenMedian,
     outputTokenMedian: summary.outputTokenMedian,
@@ -892,11 +944,15 @@ export function buildReport({
         metadata.dataKind === "measured"
           ? {
               timeoutSeconds: trustedFreezeRecord.executionPolicy.timeoutSeconds,
-              toolCallCap: trustedFreezeRecord.executionPolicy.toolCallCap
+              toolCallCap: trustedFreezeRecord.executionPolicy.toolCallCap,
+              completionBoundary:
+                trustedFreezeRecord.executionPolicy.completionBoundary
             }
           : {
               timeoutSeconds: experimentConfig.executionPolicy.timeoutSeconds,
-              toolCallCap: experimentConfig.executionPolicy.toolCallCap
+              toolCallCap: experimentConfig.executionPolicy.toolCallCap,
+              completionBoundary:
+                experimentConfig.executionPolicy.completionBoundary
             },
       pricingAsOf:
         metadata.dataKind === "measured"

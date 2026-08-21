@@ -18,9 +18,18 @@ Modernization candidates must provide `benchmark-adapter.json` matching `contrac
 
 Audit-feature candidates must provide both `benchmark-adapter.json` matching `contracts/candidate-adapter.schema.json` and `audit-adapter.json` matching `contracts/audit-adapter.schema.json`. The evaluator runs the benchmark adapter's real build and test commands, then runs one evaluator-owned reconciliation fixture through the benchmark adapter before exercising audit commands. Audit commands should support these placeholders in arguments: `{stateDirectory}`, `{requestId}`, `{proposer}`, `{approver}`, `{otherApprover}`, `{decision}`, `{businessDate}`, `{fromDate}`, `{toDate}`, `{exportPath}`, `{reason}`, `{evidence}`, `{accountSentinel}`, and `{amountSentinel}`. `propose`, `decide`, and `export` should return parseable JSON on stdout or, for export, write JSON to `{exportPath}`.
 
+The audit reconciliation fixture is separate from the legacy modernization
+fixture. It uses the canonical application's required PascalCase CSV headers,
+explicit trade directions, and deterministic seven-break profile. The evaluator
+also compiles its own `harness/TradeRecon.OverrideHarness` against the candidate's
+Domain/Application/Infrastructure projects. That harness seeds the candidate's
+`InMemoryManualOverrideStore`, invokes the reconciliation engine directly, and
+requires exactly one matching break to become `Overridden` with an idempotent
+rerun. The candidate CLI and immutable baseline contract remain unchanged.
+
 ## Evidence and gates
 
-Evidence is emitted with schema `sealed-evaluator-evidence/1.0.0`. Modernization gates are `build`, `essential-business-invariants`, and `no-critical-security-findings`. Audit-feature adds `maker-checker-separation` and `audit-integrity`.
+Evidence is emitted with schema `sealed-evaluator-evidence/1.0.0`. Modernization gates are `build`, `essential-business-invariants`, and `no-critical-security-findings`. Audit-feature adds `maker-checker-separation` and `audit-integrity`; its essential-invariants gate includes the canonical CLI fixture profile and evaluator-owned override-suppression proof.
 
 Static checks are pinned pattern scans for common committed secrets, unsafe deserialization/process-execution patterns, and dependency vulnerability output where supported manifests exist. Critical static findings and high/critical dependency findings fail `no-critical-security-findings`. These checks are evidence signals only and are not a security certification.
 

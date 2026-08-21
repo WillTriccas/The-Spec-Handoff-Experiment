@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { sha256Object, sha256Text } from './hash.js';
+import { auditReconciliationFixtureHashes } from './audit-fixtures.js';
 
 export const MODERNIZATION_BUSINESS_DATE = '2026-02-17';
 
@@ -68,9 +69,9 @@ export function fixtureHashes() {
       format: 'legacy-observable-csv-contract'
     },
     auditFeature: {
-      fixtureSetHash: sha256Object(AUDIT_SYNTHETIC_VALUES),
-      id: 'audit-hidden-synthetic-2026-08-12',
-      format: 'adapter-placeholder-command-contract'
+      ...auditReconciliationFixtureHashes(),
+      workflowValuesHash: sha256Object(AUDIT_SYNTHETIC_VALUES),
+      id: 'audit-hidden-canonical-and-workflow-2026-08-21'
     }
   };
 }

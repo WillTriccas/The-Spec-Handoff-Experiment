@@ -1,7 +1,9 @@
 # Spec factory
 
 A guided CLI workflow for producing one approved, content-addressed
-specification per episode.
+specification per episode. The active experiment uses GitHub Spec Kit
+methodology and retains the original JSON-stage workflow only as reusable legacy
+capability.
 
 The ten stages cover intent, brownfield discovery, ambiguities, requirements,
 invariants, non-functional requirements, risks, acceptance criteria,
@@ -25,3 +27,22 @@ reasoning tokens. Monetary cost stays null unless independently sourced.
 
 No worked or approved example bundle is included in this repository. Real
 Claude Opus 5 authoring sessions must populate `../specs/<episode>/approved/`.
+
+## GitHub Spec Kit handoffs
+
+The active path requires `constitution.md`, `spec.md`, `plan.md`, `tasks.md`,
+`analysis.md`, and `checklists/requirements.md`. Validation blocks missing sections, unresolved
+clarification markers, unchecked requirements-quality items, template
+placeholders, and task lists without atomic IDs.
+
+```powershell
+node bin/spec-factory.js validate-spec-kit <dir>
+node bin/spec-factory.js approve-spec-kit <dir> `
+  --id <id> `
+  --methodology-commit <sha> `
+  --approved-at <timestamp> `
+  --reviewer <reviewer> `
+  --author "Claude Opus 5" `
+  --authoring-effort <tokens-and-time.json>
+node bin/spec-factory.js render-spec-kit <dir> --id <id>
+```

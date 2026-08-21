@@ -27,6 +27,7 @@ Invoke-Checked npm run check
 Invoke-Checked npm test
 Invoke-Checked npm run build
 Invoke-Checked npm run validate:framework
+Invoke-Checked npm run validate:source-provenance
 
 Invoke-Checked $DotnetPath msbuild `
     "src\legacy-trade-reconciliation\LegacyTradeReconciliation.sln" `

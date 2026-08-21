@@ -1,0 +1,14 @@
+{
+  "schemaVersion": "methodology-provenance/1.0.0",
+  "name": "GitHub Spec Kit",
+  "repository": "https://github.com/github/spec-kit",
+  "commit": "5cf60225e989ee9c7d9ac789352838676a00181b",
+  "upstreamTemplates": {
+    "templates/constitution-template.md": "a4670ff46919b276a4c9663b4ca51830108fcfc0",
+    "templates/spec-template.md": "ceb28776215a098e977650ac090c785dcbf53651",
+    "templates/plan-template.md": "36f2eab16880bac670fe43cbe7ef2b9bc8c3aa2f",
+    "templates/tasks-template.md": "7fff087cc5a3c51a889d865fd9126607a032d233",
+    "templates/checklist-template.md": "9d1e801c3e168869a04ab60c66ca0dae4a77614f"
+  },
+  "adaptation": "The experiment preserves the constitution, specify, clarify, plan, checklist, tasks, and analyze sequence while adapting templates to the sealed Financial Services benchmark and deferring implementation to MAI Code 1.1 Flash."
+}

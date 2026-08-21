@@ -11,6 +11,8 @@
     "prompt",
     "baseline",
     "model",
+    "methodology",
+    "artifacts",
     "session",
     "tokens",
     "transcript",
@@ -18,8 +20,8 @@
     "approvedSpecification"
   ],
   "properties": {
-    "schemaVersion": { "const": "specification-authoring-evidence/1.0.0" },
-    "status": { "enum": ["completed", "failed", "timed-out", "cancelled"] },
+    "schemaVersion": { "const": "specification-authoring-evidence/2.0.0" },
+    "status": { "enum": ["completed", "failed", "cancelled"] },
     "episodeId": { "enum": ["modernization", "audit-feature"] },
     "prompt": { "$ref": "#/$defs/contentReference" },
     "baseline": {
@@ -40,6 +42,48 @@
         "id": { "const": "claude-opus-5" },
         "agentVersion": { "type": "string", "minLength": 1 },
         "reasoningEffort": { "const": "high" }
+      }
+    },
+    "methodology": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "repository", "commit", "phases"],
+      "properties": {
+        "name": { "const": "GitHub Spec Kit" },
+        "repository": { "const": "https://github.com/github/spec-kit" },
+        "commit": { "pattern": "^[a-f0-9]{40}$" },
+        "phases": {
+          "type": "array",
+          "const": [
+            "constitution",
+            "specify",
+            "clarify",
+            "plan",
+            "checklist",
+            "tasks",
+            "analyze"
+          ]
+        }
+      }
+    },
+    "artifacts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "constitution.md",
+        "spec.md",
+        "plan.md",
+        "tasks.md",
+        "analysis.md",
+        "checklists/requirements.md"
+      ],
+      "properties": {
+        "constitution.md": { "$ref": "#/$defs/contentReference" },
+        "spec.md": { "$ref": "#/$defs/contentReference" },
+        "plan.md": { "$ref": "#/$defs/contentReference" },
+        "tasks.md": { "$ref": "#/$defs/contentReference" },
+        "analysis.md": { "$ref": "#/$defs/contentReference" },
+        "checklists/requirements.md": { "$ref": "#/$defs/contentReference" }
       }
     },
     "session": {

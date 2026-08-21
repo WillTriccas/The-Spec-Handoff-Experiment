@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { AlertTriangle, Clock3, FileCheck2, Gauge, ShieldCheck } from 'lucide-react';
 import experiment from '../../benchmark/config/experiment.json';
-import evidence from '../../evidence/test-runs/2026-08-21-v1.0.0/manifest.json';
+import evidence from '../../evidence/test-runs/2026-08-21-v2.0.0/manifest.json';
 import type { EvidenceManifest, PlannedCell } from './types';
 
 const manifest = evidence as EvidenceManifest;
@@ -56,7 +56,7 @@ export default function App() {
         <header className="header">
           <div>
             <div className="eyebrow">The Spec Handoff Experiment</div>
-            <h1>Can MAI implement the same Opus-authored spec with equivalent quality and fewer tokens?</h1>
+            <h1>Can MAI execute an Opus-authored Spec Kit handoff as well as Opus tackles the raw task?</h1>
             <p className="subtitle">
               A pre-registered 12-cell Financial Services benchmark. The framework is ready for
               independent specification authoring, but measured execution is intentionally blocked.
@@ -79,6 +79,7 @@ export default function App() {
           <p>{manifest.hypothesis}</p>
           <div className="claim-badges">
             <Badge>Quality: not-evaluated</Badge>
+            <Badge>Productive time: not-evaluated</Badge>
             <Badge>Implementation tokens: not-evaluated</Badge>
             <Badge>Overall: weaker episode</Badge>
           </div>
@@ -88,21 +89,21 @@ export default function App() {
           <article className="metric-card"><Gauge size={22} /><div><div className="metric-label">Planned cells</div><div className="metric-value">12</div><div className="metric-detail">2 episodes × 2 lanes × 3 repetitions</div></div></article>
           <article className="metric-card"><FileCheck2 size={22} /><div><div className="metric-label">Approved specs</div><div className="metric-value">0/2</div><div className="metric-detail">Real Opus-authored specs are still required</div></div></article>
           <article className="metric-card"><ShieldCheck size={22} /><div><div className="metric-label">Freeze status</div><div className="metric-value">Blocked</div><div className="metric-detail">Fails closed pending specs and approvals</div></div></article>
-          <article className="metric-card"><Clock3 size={22} /><div><div className="metric-label">Run timeout</div><div className="metric-value">120 min</div><div className="metric-detail">Symmetric across both implementation models</div></div></article>
+          <article className="metric-card"><Clock3 size={22} /><div><div className="metric-label">Run timeout</div><div className="metric-value">None</div><div className="metric-detail">Each run continues until completion, failure, or cancellation</div></div></article>
         </section>
 
         <section className="card comparison-card">
           <div className="section-heading">
             <div>
               <div className="eyebrow">Controlled comparison</div>
-              <h2><code>mai-spec</code> versus <code>opus-spec</code></h2>
+              <h2><code>mai-spec</code> versus <code>opus-raw</code></h2>
             </div>
-            <Badge>Identical approved spec SHA-256 required</Badge>
+            <Badge>Spec Kit handoff versus no spec</Badge>
           </div>
           <p>
-            Both lanes receive only the task brief, immutable baseline, and the same approved
-            content-addressed specification. Implementation conversations do not receive authoring
-            transcripts, evaluator source, prior evidence, or cross-run memory.
+            MAI receives the task brief, immutable baseline, and approved Opus-authored
+            constitution/spec/plan/checklist/tasks chain. Opus receives only the task brief and
+            baseline. Neither receives evaluator source, prior evidence, or cross-run memory.
           </p>
         </section>
 
@@ -116,7 +117,7 @@ export default function App() {
               <label>Lane
                 <select value={lane} onChange={(event) => setLane(event.target.value)}>
                   <option value="all">All lanes</option>
-                  <option value="opus-spec">opus-spec</option>
+                  <option value="opus-raw">opus-raw</option>
                   <option value="mai-spec">mai-spec</option>
                 </select>
               </label>

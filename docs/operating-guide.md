@@ -15,9 +15,10 @@ node benchmark/bin/benchmark.js prepare-authoring --episode audit-feature --out 
 ```
 
 Start a fresh Claude Opus 5 conversation at high reasoning effort. Supply only
-the workspace contents. Capture timestamps, agent/model metadata, transcript
-reference/hash, prompt hash, baseline hash, and four token categories in the
-versioned authoring-evidence contract.
+the workspace contents. Follow the pinned GitHub Spec Kit sequence through
+analyze, but do not implement. Capture timestamps, agent/model metadata,
+transcript reference/hash, artifact hashes, prompt hash, baseline hash, and four
+token categories in the versioned authoring-evidence contract.
 
 ## 3. Review and approve
 
@@ -26,8 +27,8 @@ critical ambiguities or untestable requirements/acceptance criteria. After
 sign-off, run:
 
 ```powershell
-node spec-factory/bin/spec-factory.js validate specs/<episode>/approved
-node spec-factory/bin/spec-factory.js approve specs/<episode>/approved --id <episode>-opus-approved-v1
+node spec-factory/bin/spec-factory.js validate-spec-kit specs/<episode>/approved
+node spec-factory/bin/spec-factory.js approve-spec-kit specs/<episode>/approved <required options>
 ```
 
 Bind the resulting content SHA-256 and manifest SHA-256 into the authoring

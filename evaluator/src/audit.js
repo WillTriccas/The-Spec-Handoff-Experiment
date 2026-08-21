@@ -5,9 +5,11 @@ import path from 'node:path';
 import { TIMEOUTS_MS } from './constants.js';
 import { runAdapterCommand } from './commands.js';
 import { createBaseEvidence, failDimension, finalizeEvidence, passDimension, setGate } from './evidence.js';
-import { AUDIT_SYNTHETIC_VALUES, MODERNIZATION_BUSINESS_DATE, writeModernizationFixture } from './fixtures.js';
+import { AUDIT_RECONCILIATION_BUSINESS_DATE, writeAuditReconciliationFixture } from './audit-fixtures.js';
+import { AUDIT_SYNTHETIC_VALUES } from './fixtures.js';
 import { tryParseJson } from './json.js';
-import { collectOutputs, evaluateModernizationOutputs } from './modernization.js';
+import { collectOutputs } from './modernization.js';
+import { runOverrideSuppressionHarness } from './override-harness.js';
 import { resolveInside } from './paths.js';
 import { validateAuditAdapter, validateModernizationAdapter } from './schema.js';
 import { runStaticChecks } from './static-checks.js';
@@ -64,13 +66,13 @@ export async function evaluateAuditFeature(candidateRoot, options) {
   const outputDirectory = path.join(tempRoot, 'output');
   const stateDirectory = path.join(tempRoot, 'state');
   const exportPath = path.join(tempRoot, 'export.json');
-  await writeModernizationFixture(inputDirectory);
+  await writeAuditReconciliationFixture(inputDirectory);
   await fs.mkdir(outputDirectory, { recursive: true });
   await fs.mkdir(stateDirectory, { recursive: true });
   const boundOutputDirectory = await fs.realpath(outputDirectory);
 
   const baseSubstitutions = {
-    businessDate: MODERNIZATION_BUSINESS_DATE,
+    businessDate: AUDIT_RECONCILIATION_BUSINESS_DATE,
     inputDirectory,
     outputDirectory,
     stateDirectory,
@@ -126,11 +128,44 @@ export async function evaluateAuditFeature(candidateRoot, options) {
     const applicationOutputs = await collectOutputs(
       outputDirectory,
       benchmarkAdapter.outputs,
-      boundOutputDirectory
+      boundOutputDirectory,
+      AUDIT_RECONCILIATION_BUSINESS_DATE
     );
-    const applicationChecks = evaluateModernizationOutputs(applicationOutputs, applicationOutputs, applicationRun, applicationRun);
+    const applicationChecks = evaluateCanonicalApplicationOutputs(
+      applicationOutputs,
+      applicationRun
+    );
     if (!applicationTest.passed) {
       applicationChecks.failed.push('application test command failed or timed out');
+    }
+    const overrideHarness =
+      typeof options.overrideHarness === 'function'
+        ? await options.overrideHarness({
+            candidateRoot,
+            fixtureDirectory: inputDirectory,
+            businessDate: AUDIT_RECONCILIATION_BUSINESS_DATE,
+            temporaryRoot: tempRoot,
+            dotnetPath: options.dotnetPath
+          })
+        : await runOverrideSuppressionHarness({
+            candidateRoot,
+            fixtureDirectory: inputDirectory,
+            businessDate: AUDIT_RECONCILIATION_BUSINESS_DATE,
+            temporaryRoot: tempRoot,
+            dotnetPath: options.dotnetPath
+          });
+    if (overrideHarness.build) {
+      evidence.commands.push(overrideHarness.build);
+    }
+    if (overrideHarness.execution) {
+      evidence.commands.push(overrideHarness.execution);
+    }
+    evidence.overrideSuppression = overrideHarness.evidence;
+    if (!overrideHarness.passed) {
+      applicationChecks.failed.push(
+        overrideHarness.failure ||
+          'manual override suppression was not positively proved'
+      );
     }
 
     const commands = [
@@ -209,7 +244,7 @@ export async function evaluateAuditFeature(candidateRoot, options) {
 
     if (applicationBuild.passed && checks.all.length === 0 && evidence.staticChecks.blockingFindings === 0) {
       passDimension(evidence, 'functionalCorrectness', 'Synthetic audit workflow passed hidden command checks.');
-      passDimension(evidence, 'behaviorPreservation', 'Audit feature preserved core reconciliation exception resolution invariants.');
+      passDimension(evidence, 'behaviorPreservation', 'Canonical reconciliation and seeded manual override suppression invariants passed evaluator-owned checks.');
       passDimension(evidence, 'securityControls', 'No blocking pinned static/dependency findings and no sentinel values were exposed in command output/export.');
       passDimension(evidence, 'maintainability', 'Candidate exposed a schema-valid audit adapter with explicit lifecycle commands.');
       passDimension(evidence, 'operability', 'Application build/test/run and audit state-directory lifecycle completed deterministically.');
@@ -222,6 +257,7 @@ export async function evaluateAuditFeature(candidateRoot, options) {
       failDimension(evidence, 'operability', 'audit commands did not complete deterministically');
       failDimension(evidence, 'scopeTraceability', 'audit prompt gates were not fully evidenced');
     }
+
   } catch (error) {
     evidence.dimensions.functionalCorrectness.findings.push(error.message);
   } finally {
@@ -229,6 +265,75 @@ export async function evaluateAuditFeature(candidateRoot, options) {
   }
 
   return finalizeEvidence(evidence);
+}
+
+export function evaluateCanonicalApplicationOutputs(outputs, applicationRun) {
+  const failed = [];
+  const missing = Object.entries(outputs)
+    .filter(([, content]) => content == null)
+    .map(([name]) => name);
+  if (missing.length > 0) {
+    failed.push(`missing canonical declared output(s): ${missing.join(', ')}`);
+  }
+  if (!applicationRun.passed) {
+    failed.push('canonical application run did not complete through an allowed exit code');
+  }
+
+  const jsonEntry = Object.entries(outputs).find(
+    ([name]) => path.basename(name.replaceAll('\\', '/')) === 'eod-result.json'
+  );
+  const report = tryParseJson(jsonEntry?.[1] ?? '');
+  if (!report) {
+    failed.push('canonical eod-result.json was missing or not parseable JSON');
+    return { failed };
+  }
+  require(
+    failed,
+    report.schemaVersion === '1.0',
+    'canonical JSON schemaVersion was not 1.0'
+  );
+  require(
+    failed,
+    report.businessDate === AUDIT_RECONCILIATION_BUSINESS_DATE,
+    'canonical JSON business date did not match the audit reconciliation fixture'
+  );
+  require(
+    failed,
+    report.tradeCount === 7 &&
+      report.settlementCount === 7 &&
+      report.positionCount === 7,
+    'canonical fixture ingestion counts were incorrect'
+  );
+  require(
+    failed,
+    report.matchCount === 2 &&
+      report.openBreakCount === 7 &&
+      report.overriddenBreakCount === 0,
+    'canonical fixture did not produce the expected two matches and seven open breaks'
+  );
+  const expectedBreakTypes = [
+    'AmountMismatch',
+    'DirectionMismatch',
+    'MissingSettlement',
+    'MissingTrade',
+    'PositionMismatch',
+    'QuantityMismatch',
+    'SettlementDateMismatch'
+  ];
+  require(
+    failed,
+    expectedBreakTypes.every(
+      (type) => report.openBreakCountsByType?.[type] === 1
+    ),
+    'canonical fixture break profile was incomplete or incorrect'
+  );
+  require(
+    failed,
+    Array.isArray(report.breaks) &&
+      report.breaks.every((entry) => entry.status === 'Open'),
+    'canonical CLI unexpectedly reported a pre-seeded or non-open break'
+  );
+  return { failed };
 }
 
 function evaluateAuditResults(commands, exported) {

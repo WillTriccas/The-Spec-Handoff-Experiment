@@ -157,9 +157,9 @@ test("a non-completed run always scores 0 and fails every applicable gate, regar
   }
 });
 
-test("a timed-out run is scored the same as any other non-completed status", () => {
+test("a cancelled run is scored the same as any other non-completed status", () => {
   const evaluator = { attestation, scores: perfectScores(), hardGates: allGatesPassed("modernization") };
-  const result = scoreRun(evaluator, { scoringConfig, episodeId: "modernization", executionStatus: "timed-out" });
+  const result = scoreRun(evaluator, { scoringConfig, episodeId: "modernization", executionStatus: "cancelled" });
   assert.strictEqual(result.qualityScore, 0);
   assert.strictEqual(result.hardGatesPassed, false);
 });

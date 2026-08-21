@@ -11,9 +11,10 @@
   ],
   "scripts": {
     "build": "npm run build --workspaces --if-present",
-    "test": "npm run test --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present && node --test scripts/test/*.test.js",
     "check": "npm run check --workspaces --if-present",
     "validate:framework": "node scripts/validate-framework.js",
+    "validate:source-provenance": "node scripts/verify-source-provenance.js",
     "validate": "pwsh -NoProfile -File scripts/validate.ps1 -SkipNpmInstall"
   },
   "engines": {

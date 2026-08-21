@@ -65,9 +65,25 @@ export function prepareAuthoringWorkspace(
     baselineDirectory,
     repoRoot
   );
-  cpSync(path.join(repoRoot, "spec-factory", "src", "templates"), specDirectory, {
-    recursive: true
-  });
+  cpSync(
+    path.join(repoRoot, ".specify", "memory", "constitution.md"),
+    path.join(specDirectory, "constitution.md")
+  );
+  const templateMappings = [
+    ["spec-template.md", "spec.md"],
+    ["plan-template.md", "plan.md"],
+    ["tasks-template.md", "tasks.md"],
+    ["analysis-template.md", "analysis.md"],
+    ["checklist-template.md", path.join("checklists", "requirements.md")]
+  ];
+  for (const [template, destination] of templateMappings) {
+    const destinationPath = path.join(specDirectory, destination);
+    mkdirSync(path.dirname(destinationPath), { recursive: true });
+    cpSync(
+      path.join(repoRoot, ".specify", "templates", template),
+      destinationPath
+    );
+  }
 
   const promptText = readFileSync(path.join(repoRoot, episode.authoringPrompt), "utf8");
   writeFileSync(path.join(workspaceDirectory, "PROMPT.md"), promptText, "utf8");
@@ -96,7 +112,14 @@ export function prepareAuthoringWorkspace(
       "contracts/run.schema.json",
       "contracts/report.schema.json",
       "prior authoring or implementation transcripts"
-    ]
+    ],
+    methodology: {
+      name: "GitHub Spec Kit",
+      repository: experimentConfig.authoring.methodologyRepository,
+      commit: experimentConfig.authoring.methodologyCommit,
+      phases: experimentConfig.authoring.requiredPhases,
+      implementationDeferredTo: "mai-code-1.1-flash"
+    }
   };
   writeFileSync(
     path.join(workspaceDirectory, "workspace-manifest.json"),

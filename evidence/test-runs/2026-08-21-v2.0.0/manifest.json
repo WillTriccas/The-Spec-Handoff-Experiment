@@ -1,0 +1,27 @@
+{
+  "schemaVersion": "test-run-evidence-manifest/2.0.0",
+  "version": "2026-08-21-v2.0.0",
+  "status": "not-evaluated",
+  "benchmarkVersion": "spec-handoff-fsi-v2.0.0",
+  "hypothesis": "MAI Code 1.1 Flash executing an approved Opus-authored GitHub Spec Kit handoff can match or exceed direct Claude Opus 5 output quality while using less productive execution time and fewer implementation tokens.",
+  "measurements": [
+    "sealed-output-quality-score",
+    "productive-execution-seconds",
+    "implementation-token-total"
+  ],
+  "timeout": null,
+  "plannedCells": [
+    { "runId": "modernization-opus-raw-r1", "episodeId": "modernization", "laneId": "opus-raw", "repetition": 1, "executionOrder": 1, "modelId": "claude-opus-5", "status": "not-evaluated", "canonicalEvidencePath": "runs/modernization-opus-raw-r1/" },
+    { "runId": "audit-feature-mai-spec-r1", "episodeId": "audit-feature", "laneId": "mai-spec", "repetition": 1, "executionOrder": 2, "modelId": "mai-code-1.1-flash", "status": "not-evaluated", "canonicalEvidencePath": "runs/audit-feature-mai-spec-r1/" },
+    { "runId": "modernization-opus-raw-r2", "episodeId": "modernization", "laneId": "opus-raw", "repetition": 2, "executionOrder": 3, "modelId": "claude-opus-5", "status": "not-evaluated", "canonicalEvidencePath": "runs/modernization-opus-raw-r2/" },
+    { "runId": "audit-feature-mai-spec-r2", "episodeId": "audit-feature", "laneId": "mai-spec", "repetition": 2, "executionOrder": 4, "modelId": "mai-code-1.1-flash", "status": "not-evaluated", "canonicalEvidencePath": "runs/audit-feature-mai-spec-r2/" },
+    { "runId": "modernization-opus-raw-r3", "episodeId": "modernization", "laneId": "opus-raw", "repetition": 3, "executionOrder": 5, "modelId": "claude-opus-5", "status": "not-evaluated", "canonicalEvidencePath": "runs/modernization-opus-raw-r3/" },
+    { "runId": "audit-feature-mai-spec-r3", "episodeId": "audit-feature", "laneId": "mai-spec", "repetition": 3, "executionOrder": 6, "modelId": "mai-code-1.1-flash", "status": "not-evaluated", "canonicalEvidencePath": "runs/audit-feature-mai-spec-r3/" },
+    { "runId": "modernization-mai-spec-r3", "episodeId": "modernization", "laneId": "mai-spec", "repetition": 3, "executionOrder": 7, "modelId": "mai-code-1.1-flash", "status": "not-evaluated", "canonicalEvidencePath": "runs/modernization-mai-spec-r3/" },
+    { "runId": "audit-feature-opus-raw-r2", "episodeId": "audit-feature", "laneId": "opus-raw", "repetition": 2, "executionOrder": 8, "modelId": "claude-opus-5", "status": "not-evaluated", "canonicalEvidencePath": "runs/audit-feature-opus-raw-r2/" },
+    { "runId": "modernization-mai-spec-r2", "episodeId": "modernization", "laneId": "mai-spec", "repetition": 2, "executionOrder": 9, "modelId": "mai-code-1.1-flash", "status": "not-evaluated", "canonicalEvidencePath": "runs/modernization-mai-spec-r2/" },
+    { "runId": "audit-feature-opus-raw-r1", "episodeId": "audit-feature", "laneId": "opus-raw", "repetition": 1, "executionOrder": 10, "modelId": "claude-opus-5", "status": "not-evaluated", "canonicalEvidencePath": "runs/audit-feature-opus-raw-r1/" },
+    { "runId": "modernization-mai-spec-r1", "episodeId": "modernization", "laneId": "mai-spec", "repetition": 1, "executionOrder": 11, "modelId": "mai-code-1.1-flash", "status": "not-evaluated", "canonicalEvidencePath": "runs/modernization-mai-spec-r1/" },
+    { "runId": "audit-feature-opus-raw-r3", "episodeId": "audit-feature", "laneId": "opus-raw", "repetition": 3, "executionOrder": 12, "modelId": "claude-opus-5", "status": "not-evaluated", "canonicalEvidencePath": "runs/audit-feature-opus-raw-r3/" }
+  ]
+}

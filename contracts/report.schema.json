@@ -16,6 +16,7 @@
         "dataKind",
         "evidenceQualification",
         "repetitionsPerLane",
+        "executionPolicy",
         "pricingAsOf",
         "rateType",
         "frozenInputs",
@@ -40,10 +41,13 @@
         "executionPolicy": {
           "type": "object",
           "additionalProperties": false,
-          "required": ["timeoutSeconds", "toolCallCap"],
+          "required": ["timeoutSeconds", "toolCallCap", "completionBoundary"],
           "properties": {
-            "timeoutSeconds": { "type": "integer", "minimum": 1 },
-            "toolCallCap": { "type": "integer", "minimum": 1 }
+            "timeoutSeconds": { "type": "null" },
+            "toolCallCap": { "type": "null" },
+            "completionBoundary": {
+              "const": "run-until-completed-failed-or-cancelled"
+            }
           }
         },
         "pricingAsOf": { "type": ["string", "null"] },
@@ -128,9 +132,13 @@
       "required": [
         "status",
         "qualityVerdict",
+        "timeVerdict",
+        "tokenVerdict",
         "efficiencyVerdict",
         "drivingMetric",
         "qualityDelta",
+        "productiveTimeDeltaSeconds",
+        "implementationTokenDelta",
         "costSavingPercent",
         "message"
       ],
@@ -149,10 +157,18 @@
         "efficiencyVerdict": {
           "enum": ["better", "equivalent", "worse", "unavailable"]
         },
+        "timeVerdict": {
+          "enum": ["better", "equivalent", "worse", "unavailable"]
+        },
+        "tokenVerdict": {
+          "enum": ["better", "equivalent", "worse", "unavailable"]
+        },
         "drivingMetric": {
-          "enum": ["cost", "tokens", "elapsed", "unavailable"]
+          "enum": ["time-and-tokens", "unavailable"]
         },
         "qualityDelta": { "type": ["number", "null"] },
+        "productiveTimeDeltaSeconds": { "type": ["number", "null"] },
+        "implementationTokenDelta": { "type": ["number", "null"] },
         "costSavingPercent": { "type": ["number", "null"] },
         "message": { "type": "string", "minLength": 1 }
       }
@@ -252,6 +268,7 @@
         "estimatedCostUsd",
         "specAuthoringAmortizedCostUsd",
         "specAuthoringAmortizedTokens",
+        "specAuthoringAmortizedSeconds",
         "evidencePath"
       ],
       "properties": {
@@ -262,7 +279,7 @@
         "inputMode": { "enum": ["raw", "spec"] },
         "repetition": { "type": "integer", "minimum": 1 },
         "status": {
-          "enum": ["completed", "failed", "timed-out", "cancelled"]
+          "enum": ["completed", "failed", "cancelled"]
         },
         "qualityScore": {
           "type": "number",
@@ -302,6 +319,10 @@
           "type": "integer",
           "minimum": 0
         },
+        "specAuthoringAmortizedSeconds": {
+          "type": "number",
+          "minimum": 0
+        },
         "evidencePath": { "type": "string", "minLength": 1 }
       },
       "allOf": [
@@ -309,7 +330,7 @@
           "if": {
             "properties": {
               "status": {
-                "enum": ["failed", "timed-out", "cancelled"]
+                "enum": ["failed", "cancelled"]
               }
             }
           },
@@ -337,6 +358,7 @@
         "runCount",
         "elapsedMedianSeconds",
         "productiveMedianSeconds",
+        "endToEndProductiveMedianSeconds",
         "tokenMedian",
         "uncachedInputTokenMedian",
         "cachedInputTokenMedian",
@@ -370,6 +392,10 @@
         "runCount": { "type": "integer", "minimum": 1 },
         "elapsedMedianSeconds": { "type": "number", "minimum": 0 },
         "productiveMedianSeconds": {
+          "type": ["number", "null"],
+          "minimum": 0
+        },
+        "endToEndProductiveMedianSeconds": {
           "type": ["number", "null"],
           "minimum": 0
         },

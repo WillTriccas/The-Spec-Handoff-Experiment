@@ -199,7 +199,9 @@ function validateMeasuredFreeze({
     assertFrozenObjectMatch(
       plan.spec.authoringEffort,
       {
-        elapsedSeconds: Math.round((frozenEffort?.elapsedMinutes ?? 0) * 60),
+        elapsedSeconds:
+          frozenEffort?.elapsedSeconds ??
+          Math.round((frozenEffort?.elapsedMinutes ?? 0) * 60),
         inputTokens: frozenEffort?.uncachedInputTokens ?? frozenEffort?.inputTokens ?? 0,
         cachedInputTokens: frozenEffort?.cachedInputTokens ?? 0,
         outputTokens: frozenEffort?.outputTokens ?? 0,
@@ -243,20 +245,9 @@ function validateMeasuredFreeze({
     "execution policy"
   );
   const policy = freezeRecord.executionPolicy ?? {};
-  if (
-    typeof policy.timeoutSeconds === "number" &&
-    execution.elapsedSeconds > policy.timeoutSeconds
-  ) {
+  if (policy.timeoutSeconds !== null || policy.toolCallCap !== null) {
     throw new Error(
-      `Measured run exceeded frozen timeoutSeconds (${execution.elapsedSeconds} > ${policy.timeoutSeconds})`
-    );
-  }
-  if (
-    typeof policy.toolCallCap === "number" &&
-    execution.toolCalls > policy.toolCallCap
-  ) {
-    throw new Error(
-      `Measured run exceeded frozen toolCallCap (${execution.toolCalls} > ${policy.toolCallCap})`
+      "Measured run requires the frozen no-timeout, no-tool-call-cap policy"
     );
   }
 

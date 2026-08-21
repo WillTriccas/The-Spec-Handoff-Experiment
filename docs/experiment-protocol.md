@@ -1,68 +1,73 @@
 # Experiment protocol
 
-## Pre-registered hypothesis
+## Question
 
-For each episode, `mai-spec` supports the headline hypothesis only when it:
+Can MAI Code 1.1 Flash execute a high-quality Opus-authored GitHub Spec Kit
+handoff as effectively as Claude Opus 5 tackles the same task directly without a
+specification?
 
-1. passes every applicable hard gate in all three repetitions;
-2. achieves equivalent-or-better median quality than `opus-spec`; and
-3. uses fewer median **implementation-only tokens** than `opus-spec`.
+## Lanes
 
-The overall status is the weaker episode status, never an average. Control-lane
-hard-gate failures are displayed prominently but do not make a failing comparison
-lane eligible.
+| Lane | Model | Inputs |
+|---|---|---|
+| `mai-spec` | MAI Code 1.1 Flash | Task brief, immutable baseline, approved Opus-authored Spec Kit artifacts |
+| `opus-raw` | Claude Opus 5 | Task brief and immutable baseline only |
 
-## Fixed matrix
+Each lane runs three fresh repetitions for each of two episodes: 12
+implementation cells total. Workspaces and conversations are isolated, execution
+is deterministically interleaved, cross-run memory and human remediation are
+prohibited, and all terminal states are retained.
 
-- Episodes: `modernization`, `audit-feature`.
-- Lanes: `opus-spec`, `mai-spec`.
-- Repetitions: three per episode/lane.
-- Total implementation cells: 12.
-- Authoring sessions: two, one independent Opus session per episode.
-- Models: observable IDs `claude-opus-5` and `mai-code-1.1-flash`.
-- Reasoning effort: high.
-- Timeout: 7,200 seconds symmetrically.
-- Tool-call cap: 200 symmetrically.
-- Workspaces and conversations: fresh for every run.
-- Cross-run memory and human remediation: prohibited.
-- Execution order: deterministic, seeded, randomized, and interleaved.
+## Opus specification authoring
 
-Completed, failed, timed-out, and cancelled terminal states are retained.
-Non-completed cells score zero and fail applicable hard gates. Selective reruns
-cannot replace a registered cell.
+One fresh Opus session per episode follows the GitHub Spec Kit sequence pinned in
+`benchmark/config/experiment.json`:
 
-## Fixed inputs
+1. constitution;
+2. specify;
+3. clarify;
+4. plan;
+5. requirements-quality checklist;
+6. tasks;
+7. analyze.
 
-Implementation sessions receive only:
+The result is `constitution.md`, `spec.md`, `plan.md`, `tasks.md`,
+`analysis.md`, and `checklists/requirements.md`. Implementation is deliberately deferred to
+`mai-spec`. Independent approval creates one content-addressed manifest reused by
+all three MAI repetitions. Opus authoring remains blind to evaluator source,
+hidden fixtures, scores, evidence, and expected results.
 
-1. the episode task brief;
-2. the immutable tagged baseline; and
-3. the independently approved specification rendered from its content-bound
-   manifest.
+## Measurements
 
-They do not receive the authoring transcript, authoring conversation, evaluator,
-scoring configuration, prior evidence, expected results, or another run's
-context.
+Primary comparisons, per episode and overall:
 
-## Evaluation and consumption
+1. sealed evaluator output quality score;
+2. median productive execution seconds;
+3. median implementation tokens, with uncached input, cached input, output, and
+   reasoning tokens retained separately.
 
-The sealed evaluator scores functional correctness, behavior preservation,
-security controls, maintainability, operability, and scope traceability, then
-applies episode hard gates.
+Secondary context includes wall-clock elapsed time, queue/throttle time, and
+Spec Kit authoring time/tokens amortized across the three MAI repetitions.
+Monetary cost is unavailable unless a dated source is frozen.
 
-Tokens are the primary consumption proxy. Reports preserve uncached input, cached
-input, output, and reasoning tokens separately. They show:
+There is no implementation timeout and no tool-call cap. Runs continue until
+completed, failed, or explicitly cancelled.
 
-- implementation-only totals; and
-- end-to-end totals with the one-time episode authoring tokens transparently
-  amortized across the three repetitions in each lane.
+## Claim rule
 
-Productive execution time remains separate from queue/throttle time. Monetary
-pricing stays unavailable unless a dated, sourced rate card is supplied before
-freeze.
+The hypothesis is supported for an episode only when:
 
-## Fail-closed reporting
+- every `mai-spec` repetition passes all applicable hard gates;
+- MAI quality is equivalent to or better than `opus-raw` within the registered
+  margin; and
+- MAI has both lower median productive execution time and fewer median
+  implementation tokens.
 
-Measured reports reject incomplete matrices, duplicate cells/run IDs, mixed
-benchmark versions, unexpected cells, selective replacements, execution-policy
-drift, and differing spec hashes within an episode.
+Quality, time, and token verdicts are reported separately. The weaker episode
+determines overall status.
+
+## Fail-closed evidence
+
+Reports reject incomplete or duplicate matrices, mixed versions, selective
+replacement, wrong model/lane assignment, raw Opus runs carrying spec content,
+MAI spec-hash drift, prompt drift, and missing timing/token categories.

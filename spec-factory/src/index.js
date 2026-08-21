@@ -5,4 +5,12 @@ export { loadBundle, bundleStagePath, writeStage, assembleSpec, renderSpecMarkdo
 export { validateBundle, isApprovable } from "./validate.js";
 export { scoreBundle, SPEC_SCORING_WEIGHTS } from "./scoring.js";
 export { hashBundle, hashText, canonicalize } from "./hashing.js";
-
+export {
+  SPEC_KIT_ARTIFACTS,
+  loadSpecKitBundle,
+  validateSpecKitBundle,
+  assembleSpecKitBundle,
+  hashSpecKitBundle,
+  renderSpecKitBundle,
+  approveSpecKitBundle
+} from "./spec-kit.js";

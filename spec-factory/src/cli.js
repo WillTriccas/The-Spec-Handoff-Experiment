@@ -6,6 +6,12 @@ import { loadBundle, bundleStagePath, assembleSpec, renderSpecMarkdown } from ".
 import { validateBundle, isApprovable } from "./validate.js";
 import { scoreBundle } from "./scoring.js";
 import { hashBundle } from "./hashing.js";
+import {
+  approveSpecKitBundle,
+  loadSpecKitBundle,
+  renderSpecKitBundle,
+  validateSpecKitBundle
+} from "./spec-kit.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const TEMPLATES_DIR = path.join(__dirname, "templates");
@@ -20,6 +26,9 @@ Commands:
   approve <dir>           Validate + score, then write manifest.json if approvable
   hash <dir>              Print the sha256 of the assembled spec bundle
   render <dir>            Render the assembled spec bundle to Markdown
+  validate-spec-kit <dir> Validate GitHub Spec Kit handoff artifacts
+  approve-spec-kit <dir>  Write a content-bound Spec Kit manifest
+  render-spec-kit <dir>   Render the approved Spec Kit handoff
   stages                  List the guided workflow stages in order
 `);
 }
@@ -125,6 +134,56 @@ export function cmdRender(bundleDir, { id, title } = {}) {
   return 0;
 }
 
+export function cmdValidateSpecKit(bundleDir) {
+  const result = validateSpecKitBundle(loadSpecKitBundle(bundleDir));
+  if (!result.valid) {
+    for (const error of result.errors) console.error(`ERROR: ${error}`);
+    return 1;
+  }
+  console.log("GitHub Spec Kit bundle is complete and approvable.");
+  return 0;
+}
+
+export function cmdApproveSpecKit(bundleDir, options = {}) {
+  const required = [
+    "id",
+    "methodology-commit",
+    "approved-at",
+    "reviewer",
+    "author",
+    "authoring-effort"
+  ];
+  const missing = required.filter((key) => !options[key]);
+  if (missing.length > 0) {
+    console.error(`Missing required options: ${missing.map((key) => `--${key}`).join(", ")}`);
+    return 1;
+  }
+  let authoringEffort;
+  try {
+    authoringEffort = JSON.parse(readFileSync(options["authoring-effort"], "utf8"));
+    const manifest = approveSpecKitBundle(bundleDir, {
+      id: options.id,
+      methodologyCommit: options["methodology-commit"],
+      approvedAt: options["approved-at"],
+      reviewer: options.reviewer,
+      author: options.author,
+      authoringEffort
+    });
+    console.log(JSON.stringify(manifest, null, 2));
+    return 0;
+  } catch (error) {
+    console.error(error.message);
+    return 1;
+  }
+}
+
+export function cmdRenderSpecKit(bundleDir, options = {}) {
+  console.log(
+    renderSpecKitBundle(loadSpecKitBundle(bundleDir), { id: options.id })
+  );
+  return 0;
+}
+
 function parseOptions(args) {
   const positional = [];
   const options = {};
@@ -166,6 +225,15 @@ export function run(argv) {
     case "render":
       if (!positional[0]) { console.error("Usage: spec-factory render <dir> [--id <id>] [--title <title>]"); return 1; }
       return cmdRender(positional[0], options);
+    case "validate-spec-kit":
+      if (!positional[0]) { console.error("Usage: spec-factory validate-spec-kit <dir>"); return 1; }
+      return cmdValidateSpecKit(positional[0]);
+    case "approve-spec-kit":
+      if (!positional[0]) { console.error("Usage: spec-factory approve-spec-kit <dir> [options]"); return 1; }
+      return cmdApproveSpecKit(positional[0], options);
+    case "render-spec-kit":
+      if (!positional[0]) { console.error("Usage: spec-factory render-spec-kit <dir> [--id <id>]"); return 1; }
+      return cmdRenderSpecKit(positional[0], options);
     default:
       printUsage();
       return command ? 1 : 0;

@@ -26,6 +26,8 @@ export function createBaseEvidence(episodeId) {
         test: 120000,
         run: 60000,
         auditCommand: 15000,
+        overrideHarnessBuild: 120000,
+        overrideHarnessRun: 60000,
         scanner: 30000
       },
       fixtureHashes: fixtureHashes(),

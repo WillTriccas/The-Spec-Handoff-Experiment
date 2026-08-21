@@ -4,11 +4,11 @@ import { execFileSync, execSync } from "node:child_process";
 import path from "node:path";
 import { REPO_ROOT, CONFIG_DIR, CONTRACTS_DIR, loadExperimentConfig } from "./config.js";
 import {
-  assembleSpec,
-  loadBundle,
-  renderSpecMarkdown
-} from "../../spec-factory/src/bundle.js";
-import { hashBundle } from "../../spec-factory/src/hashing.js";
+  hashSpecKitBundle,
+  loadSpecKitBundle,
+  renderSpecKitBundle,
+  validateSpecKitBundle
+} from "../../spec-factory/src/spec-kit.js";
 
 /**
  * Deterministically hash a directory tree: sha256 over the sorted list of
@@ -232,21 +232,32 @@ export function prepareRunWorkspace(run, { baselineDir, outputRoot, repoRoot = R
       );
     }
     const manifest = JSON.parse(readFileSync(manifestPath, "utf8"));
-    const bundle = loadBundle(specDir);
-    const assembledSpecSha256 = hashBundle(assembleSpec(bundle, { id: manifest.id }));
+    const bundle = loadSpecKitBundle(specDir);
+    const validation = validateSpecKitBundle(bundle);
+    if (!validation.valid) {
+      throw new Error(
+        `Spec Kit bundle at ${specDir} is invalid: ${validation.errors.join("; ")}`
+      );
+    }
+    const assembledSpecSha256 = hashSpecKitBundle(bundle, {
+      id: manifest.id,
+      methodologyCommit: manifest.methodology?.commit
+    });
     if (assembledSpecSha256 !== manifest.sha256) {
       throw new Error(
         `Spec bundle at ${specDir} no longer matches its approved manifest; approve it again before preparing runs.`
       );
     }
-    const renderedSpec = renderSpecMarkdown(bundle, { id: manifest.id, title: run.episodeName });
+    const renderedSpec = renderSpecKitBundle(bundle, { id: manifest.id });
     promptText = assemblePromptText({ briefText, inputMode: "spec", renderedSpec });
     specInfo = {
       id: manifest.id,
       sha256: manifest.sha256,
       qualityScore: manifest.qualityScore,
       authoringEffort: {
-        elapsedSeconds: Math.round((manifest.authoringEffort?.elapsedMinutes ?? 0) * 60),
+        elapsedSeconds:
+          manifest.authoringEffort?.elapsedSeconds ??
+          Math.round((manifest.authoringEffort?.elapsedMinutes ?? 0) * 60),
         inputTokens:
           manifest.authoringEffort?.uncachedInputTokens ??
           manifest.authoringEffort?.inputTokens ??

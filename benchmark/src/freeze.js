@@ -12,9 +12,13 @@ import {
   loadScoringConfig
 } from "./config.js";
 import { hashDirectory, hashDirectoryAtRef, hashFile, hashText } from "./prepare.js";
-import { assembleSpec, loadBundle, renderSpecMarkdown } from "../../spec-factory/src/bundle.js";
-import { hashBundle } from "../../spec-factory/src/hashing.js";
-import { validateBundle } from "../../spec-factory/src/validate.js";
+import {
+  hashSpecKitBundle,
+  loadSpecKitBundle,
+  renderSpecKitBundle,
+  validateSpecKitBundle
+} from "../../spec-factory/src/spec-kit.js";
+import { validateAgainstSchema } from "./schema-lite.js";
 
 const REQUIRED_APPROVALS = [
   "scenario",
@@ -81,18 +85,25 @@ function inspectApprovedSpec(episode, repoRoot, blockers) {
       assembledSpecSha256: null,
       specQualityScore: null,
       specAuthoringEffort: null,
+      methodology: null,
+      manifestApprovedAt: null,
+      manifestReviewer: null,
+      manifestAuthor: null,
       renderedSpec: null
     };
   }
 
   try {
     const manifest = readJson(manifestPath);
-    const bundle = loadBundle(specDirectory);
-    const validation = validateBundle(bundle);
-    if (validation.errors.length > 0 || validation.criticalBlocks.length > 0) {
-      blockers.push(`Approved specification for ${episode.id} no longer passes spec-factory validation.`);
+    const bundle = loadSpecKitBundle(specDirectory);
+    const validation = validateSpecKitBundle(bundle);
+    if (!validation.valid) {
+      blockers.push(`Approved specification for ${episode.id} no longer passes GitHub Spec Kit artifact validation.`);
     }
-    const assembledSpecSha256 = hashBundle(assembleSpec(bundle, { id: manifest.id }));
+    const assembledSpecSha256 = hashSpecKitBundle(bundle, {
+      id: manifest.id,
+      methodologyCommit: manifest.methodology?.commit
+    });
     if (!isSha256(manifest.sha256) || assembledSpecSha256 !== manifest.sha256) {
       blockers.push(`Approved specification content hash is invalid for ${episode.id}.`);
     }
@@ -102,10 +113,11 @@ function inspectApprovedSpec(episode, repoRoot, blockers) {
       assembledSpecSha256,
       specQualityScore: manifest.qualityScore ?? null,
       specAuthoringEffort: manifest.authoringEffort ?? null,
-      renderedSpec: renderSpecMarkdown(bundle, {
-        id: manifest.id,
-        title: episode.name
-      })
+      methodology: manifest.methodology ?? null,
+      manifestApprovedAt: manifest.approvedAt ?? null,
+      manifestReviewer: manifest.reviewer ?? null,
+      manifestAuthor: manifest.author ?? null,
+      renderedSpec: renderSpecKitBundle(bundle, { id: manifest.id })
     };
   } catch (error) {
     blockers.push(`Approved specification for ${episode.id} cannot be loaded: ${error.message}`);
@@ -115,12 +127,50 @@ function inspectApprovedSpec(episode, repoRoot, blockers) {
       assembledSpecSha256: null,
       specQualityScore: null,
       specAuthoringEffort: null,
+      methodology: null,
+      manifestApprovedAt: null,
+      manifestReviewer: null,
+      manifestAuthor: null,
       renderedSpec: null
     };
   }
 }
 
-function inspectAuthoringEvidence(episode, spec, repoRoot, blockers) {
+function resolveContentReference(reference, label, repoRoot, blockers) {
+  if (
+    typeof reference?.path !== "string" ||
+    !isSha256(reference?.sha256)
+  ) {
+    blockers.push(`${label} reference is incomplete.`);
+    return null;
+  }
+  const root = path.resolve(repoRoot);
+  const resolved = path.resolve(root, reference.path);
+  if (
+    resolved !== root &&
+    !resolved.startsWith(`${root}${path.sep}`)
+  ) {
+    blockers.push(`${label} path escapes the repository.`);
+    return null;
+  }
+  if (!existsSync(resolved)) {
+    blockers.push(`${label} file is missing.`);
+    return null;
+  }
+  if (hashFile(resolved) !== reference.sha256) {
+    blockers.push(`${label} content hash does not match its evidence.`);
+  }
+  return resolved;
+}
+
+function inspectAuthoringEvidence(
+  episode,
+  spec,
+  baseline,
+  authoringConfig,
+  repoRoot,
+  blockers
+) {
   const evidencePath = path.join(repoRoot, episode.authoringEvidence);
   if (!existsSync(evidencePath)) {
     blockers.push(`Specification-authoring evidence is missing for ${episode.id}.`);
@@ -133,20 +183,155 @@ function inspectAuthoringEvidence(episode, spec, repoRoot, blockers) {
 
   try {
     const evidence = readJson(evidencePath);
+    const schema = readJson(
+      path.join(
+        CONTRACTS_DIR,
+        "specification-authoring-evidence.schema.json"
+      )
+    );
+    const schemaResult = validateAgainstSchema(schema, evidence);
+    if (!schemaResult.valid) {
+      blockers.push(
+        `Specification-authoring evidence contract failed for ${episode.id}: ${schemaResult.errors.join("; ")}`
+      );
+    }
     if (evidence.status !== "completed") {
       blockers.push(`Specification-authoring session for ${episode.id} is not completed.`);
     }
-    if (evidence.model?.id !== "claude-opus-5" || evidence.model?.reasoningEffort !== "high") {
+    if (
+      evidence.model?.id !== authoringConfig.modelId ||
+      evidence.model?.agentVersion !== authoringConfig.agentVersion ||
+      evidence.model?.reasoningEffort !== authoringConfig.reasoningEffort
+    ) {
       blockers.push(`Specification-authoring model pin is invalid for ${episode.id}.`);
+    }
+    if (
+      evidence.methodology?.name !== "GitHub Spec Kit" ||
+      evidence.methodology?.repository !== "https://github.com/github/spec-kit" ||
+      !/^[a-f0-9]{40}$/.test(evidence.methodology?.commit ?? "") ||
+      evidence.methodology?.commit !== spec.methodology?.commit ||
+      JSON.stringify(evidence.methodology?.phases) !==
+        JSON.stringify(spec.methodology?.phases)
+    ) {
+      blockers.push(`GitHub Spec Kit methodology provenance is invalid for ${episode.id}.`);
+    }
+    const requiredArtifacts = [
+      "constitution.md",
+      "spec.md",
+      "plan.md",
+      "tasks.md",
+      "analysis.md",
+      "checklists/requirements.md"
+    ];
+    if (
+      requiredArtifacts.some(
+        (artifact) =>
+          !isSha256(evidence.artifacts?.[artifact]?.sha256) ||
+          typeof evidence.artifacts?.[artifact]?.path !== "string"
+      )
+    ) {
+      blockers.push(`Spec Kit artifact evidence is incomplete for ${episode.id}.`);
     }
     if (evidence.blindnessAttestation?.attested !== true) {
       blockers.push(`Specification-authoring blindness is not attested for ${episode.id}.`);
     }
     if (
+      evidence.prompt?.path !== episode.authoringPrompt ||
+      resolveContentReference(
+        evidence.prompt,
+        `${episode.id} authoring prompt`,
+        repoRoot,
+        blockers
+      ) === null
+    ) {
+      blockers.push(`Authoring prompt evidence is not bound to the frozen prompt for ${episode.id}.`);
+    }
+    resolveContentReference(
+      evidence.transcript,
+      `${episode.id} authoring transcript`,
+      repoRoot,
+      blockers
+    );
+    for (const artifact of [
+      "constitution.md",
+      "spec.md",
+      "plan.md",
+      "tasks.md",
+      "analysis.md",
+      "checklists/requirements.md"
+    ]) {
+      const reference = evidence.artifacts?.[artifact];
+      const expectedPath = `${episode.specBundle}/${artifact}`.replaceAll("\\", "/");
+      if (reference?.path?.replaceAll("\\", "/") !== expectedPath) {
+        blockers.push(`${episode.id} ${artifact} evidence path is not the approved artifact.`);
+      }
+      resolveContentReference(
+        reference,
+        `${episode.id} ${artifact}`,
+        repoRoot,
+        blockers
+      );
+    }
+    if (
+      evidence.baseline?.ref !== baseline?.ref ||
+      evidence.baseline?.commit !== baseline?.commit ||
+      evidence.baseline?.sha256 !== baseline?.sha256
+    ) {
+      blockers.push(`Authoring baseline evidence does not match the frozen baseline for ${episode.id}.`);
+    }
+    const approved = evidence.approvedSpecification;
+    const expectedManifestPath = `${episode.specBundle}/manifest.json`.replaceAll(
+      "\\",
+      "/"
+    );
+    if (
+      approved?.manifestPath?.replaceAll("\\", "/") !== expectedManifestPath
+    ) {
+      blockers.push(`Approved manifest evidence path is invalid for ${episode.id}.`);
+    }
+    const manifestReference = {
+      path: approved?.manifestPath,
+      sha256: approved?.manifestSha256
+    };
+    resolveContentReference(
+      manifestReference,
+      `${episode.id} approved manifest`,
+      repoRoot,
+      blockers
+    );
+    if (
       spec.assembledSpecSha256 &&
-      evidence.approvedSpecification?.contentSha256 !== spec.assembledSpecSha256
+      approved?.contentSha256 !== spec.assembledSpecSha256
     ) {
       blockers.push(`Authoring evidence and approved specification hash disagree for ${episode.id}.`);
+    }
+    if (
+      approved?.approvedAt !== spec.manifestApprovedAt ||
+      approved?.reviewer !== spec.manifestReviewer ||
+      spec.manifestAuthor !== "Claude Opus 5"
+    ) {
+      blockers.push(`Approved manifest review/author metadata does not match authoring evidence for ${episode.id}.`);
+    }
+    const startedAt = Date.parse(evidence.session?.startedAt ?? "");
+    const endedAt = Date.parse(evidence.session?.endedAt ?? "");
+    const elapsedSeconds =
+      Number.isFinite(startedAt) && Number.isFinite(endedAt) && endedAt >= startedAt
+        ? Math.round((endedAt - startedAt) / 1000)
+        : null;
+    const effort = spec.specAuthoringEffort;
+    const expectedEffort = {
+      elapsedSeconds,
+      uncachedInputTokens: evidence.tokens?.uncachedInput,
+      cachedInputTokens: evidence.tokens?.cachedInput,
+      outputTokens: evidence.tokens?.output,
+      reasoningTokens: evidence.tokens?.reasoning
+    };
+    for (const [field, expected] of Object.entries(expectedEffort)) {
+      if (effort?.[field] !== expected) {
+        blockers.push(
+          `Approved manifest authoringEffort.${field} does not match ${episode.id} authoring evidence.`
+        );
+      }
     }
     return {
       path: episode.authoringEvidence,
@@ -200,11 +385,12 @@ export function createFreezeReadiness({
     blockers.push("The experiment must pin exactly three repetitions per lane.");
   }
   if (
-    experimentConfig.executionPolicy?.timeoutSeconds !== 7200 ||
-    !Number.isInteger(experimentConfig.executionPolicy?.toolCallCap) ||
-    experimentConfig.executionPolicy.toolCallCap <= 0
+    experimentConfig.executionPolicy?.timeoutSeconds !== null ||
+    experimentConfig.executionPolicy?.toolCallCap !== null ||
+    experimentConfig.executionPolicy?.completionBoundary !==
+      "run-until-completed-failed-or-cancelled"
   ) {
-    blockers.push("Execution timeout and tool-call cap are not pinned.");
+    blockers.push("Execution policy must explicitly have no timeout or tool-call cap.");
   }
   if (
     experimentConfig.executionPolicy?.freshWorkspacePerRun !== true ||
@@ -217,8 +403,8 @@ export function createFreezeReadiness({
   }
 
   const lanes = experimentConfig.lanes.map((lane) => lane.id).sort();
-  if (JSON.stringify(lanes) !== JSON.stringify(["mai-spec", "opus-spec"])) {
-    blockers.push("The frozen matrix must contain only opus-spec and mai-spec lanes.");
+  if (JSON.stringify(lanes) !== JSON.stringify(["mai-spec", "opus-raw"])) {
+    blockers.push("The frozen matrix must contain only opus-raw and mai-spec lanes.");
   }
 
   const baselines = experimentConfig.episodes.map((episode) => {
@@ -252,20 +438,41 @@ export function createFreezeReadiness({
     }
 
     const spec = inspectApprovedSpec(episode, repoRoot, blockers);
-    const authoringEvidence = inspectAuthoringEvidence(episode, spec, repoRoot, blockers);
+    if (
+      spec.methodology &&
+      (
+        spec.methodology.repository !==
+          experimentConfig.authoring.methodologyRepository ||
+        spec.methodology.commit !==
+          experimentConfig.authoring.methodologyCommit ||
+        JSON.stringify(spec.methodology.phases) !==
+          JSON.stringify(experimentConfig.authoring.requiredPhases)
+      )
+    ) {
+      blockers.push(`Approved Spec Kit methodology provenance drifted for ${episode.id}.`);
+    }
+    const baseline = baselines.find(
+      (entry) => entry.episodeId === episode.id
+    );
+    const authoringEvidence = inspectAuthoringEvidence(
+      episode,
+      spec,
+      baseline,
+      experimentConfig.authoring,
+      repoRoot,
+      blockers
+    );
     const briefText = existsSync(taskBriefPath) ? readFileSync(taskBriefPath, "utf8") : "";
     const specPromptSha256 = spec.renderedSpec
       ? hashText(`${briefText.trimEnd()}\n\n---\n\n# Approved specification\n\n${spec.renderedSpec}`)
       : null;
+    const rawPromptSha256 = hashText(briefText);
     const laneSpecSha256 = Object.fromEntries(
-      experimentConfig.lanes.map((lane) => [lane.id, spec.assembledSpecSha256])
+      experimentConfig.lanes.map((lane) => [
+        lane.id,
+        lane.inputMode === "spec" ? spec.assembledSpecSha256 : null
+      ])
     );
-    if (
-      isSha256(laneSpecSha256["opus-spec"]) &&
-      laneSpecSha256["opus-spec"] !== laneSpecSha256["mai-spec"]
-    ) {
-      blockers.push(`Implementation lanes do not share one specification hash for ${episode.id}.`);
-    }
 
     return {
       episodeId: episode.id,
@@ -276,6 +483,7 @@ export function createFreezeReadiness({
       authoringPlanPath: episode.authoringPlan,
       authoringPlanSha256: hashFile(authoringPlanPath),
       authoringEvidence,
+      rawPromptSha256,
       specPromptSha256,
       ...spec,
       renderedSpec: undefined,
@@ -387,11 +595,25 @@ export function assertUsableFreezeRecord(record, expectedSha256 = null) {
       `Measured evidence requires all independent freeze approvals: ${storedApprovalBlockers.join(" ")}`
     );
   }
+  if (
+    record.executionPolicy?.timeoutSeconds !== null ||
+    record.executionPolicy?.toolCallCap !== null ||
+    record.executionPolicy?.completionBoundary !==
+      "run-until-completed-failed-or-cancelled"
+  ) {
+    throw new Error("Measured evidence requires the frozen no-timeout execution policy");
+  }
   for (const entry of record.promptsAndSpecs ?? []) {
-    const opusHash = entry.laneSpecSha256?.["opus-spec"];
     const maiHash = entry.laneSpecSha256?.["mai-spec"];
-    if (!isSha256(opusHash) || opusHash !== maiHash || entry.assembledSpecSha256 !== opusHash) {
-      throw new Error(`Measured evidence requires one identical approved specification for ${entry.episodeId}`);
+    const opusRawHash = entry.laneSpecSha256?.["opus-raw"];
+    if (
+      !isSha256(maiHash) ||
+      entry.assembledSpecSha256 !== maiHash ||
+      opusRawHash !== null ||
+      entry.methodology?.repository !== "https://github.com/github/spec-kit" ||
+      !/^[a-f0-9]{40}$/.test(entry.methodology?.commit ?? "")
+    ) {
+      throw new Error(`Measured evidence requires an approved specification only for mai-spec in ${entry.episodeId}`);
     }
     if (entry.authoringEvidence?.status !== "completed") {
       throw new Error(`Measured evidence requires completed authoring evidence for ${entry.episodeId}`);

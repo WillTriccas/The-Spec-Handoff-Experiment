@@ -8,12 +8,14 @@ describe('pre-measurement dashboard', () => {
     expect(screen.getAllByText(/not-evaluated/i).length).toBeGreaterThan(0);
     expect(screen.getByText('12')).toBeTruthy();
     expect(screen.getByText('0/2')).toBeTruthy();
+    expect(screen.getByText('None')).toBeTruthy();
+    expect(screen.getByText(/Opus-authored Spec Kit/i)).toBeTruthy();
   });
 
   it('shows the exact two-lane plan in engineering view', () => {
     render(<App />);
     fireEvent.click(screen.getByText('Engineering'));
-    expect(screen.getAllByText('opus-spec').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('opus-raw').length).toBeGreaterThan(0);
     expect(screen.getAllByText('mai-spec').length).toBeGreaterThan(0);
     fireEvent.change(screen.getByLabelText('Lane'), { target: { value: 'mai-spec' } });
     expect(screen.getAllByText('mai-spec').length).toBeGreaterThan(0);

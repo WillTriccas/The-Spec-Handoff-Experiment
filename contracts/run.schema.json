@@ -31,7 +31,7 @@
     },
     "benchmarkVersion": { "type": "string", "minLength": 1 },
     "episodeId": { "enum": ["modernization", "audit-feature"] },
-    "laneId": { "enum": ["opus-spec", "mai-spec"] },
+    "laneId": { "enum": ["opus-raw", "mai-spec"] },
     "model": {
       "type": "object",
       "additionalProperties": false,
@@ -212,7 +212,7 @@
       ],
       "properties": {
         "status": {
-          "enum": ["completed", "failed", "timed-out", "cancelled"]
+          "enum": ["completed", "failed", "cancelled"]
         },
         "order": { "type": "integer", "minimum": 1 },
         "startedAt": { "type": "string", "format": "date-time" },
@@ -332,7 +332,13 @@
             "properties": {
               "modelId": { "type": "string", "minLength": 1 },
               "modelBuildId": { "type": "string", "minLength": 1 },
-              "agentBuildId": { "type": "string", "minLength": 1 }
+              "agentBuildId": { "type": "string", "minLength": 1 },
+              "productiveSeconds": { "type": "number", "minimum": 0 },
+              "queueSeconds": { "type": "number", "minimum": 0 },
+              "inputTokens": { "type": "integer", "minimum": 0 },
+              "cachedInputTokens": { "type": "integer", "minimum": 0 },
+              "outputTokens": { "type": "integer", "minimum": 0 },
+              "reasoningTokens": { "type": "integer", "minimum": 0 }
             }
           },
           "source": {
@@ -379,11 +385,11 @@
       }
     },
     {
-      "if": { "properties": { "laneId": { "const": "opus-spec" } } },
+      "if": { "properties": { "laneId": { "const": "opus-raw" } } },
       "then": {
         "properties": {
-          "inputMode": { "const": "spec" },
-          "spec": { "type": "object" },
+          "inputMode": { "const": "raw" },
+          "spec": { "type": "null" },
           "model": {
             "properties": {
               "tier": { "const": "opus" },

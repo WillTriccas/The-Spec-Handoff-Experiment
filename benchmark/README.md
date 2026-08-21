@@ -1,6 +1,7 @@
 # Benchmark engine
 
-The engine plans and enforces the two-lane, 12-cell experiment.
+The engine plans and enforces the `mai-spec` versus `opus-raw`, 12-cell
+experiment with no implementation timeout.
 
 ```powershell
 node bin/benchmark.js list-runs --randomized

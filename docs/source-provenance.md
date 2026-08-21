@@ -16,5 +16,16 @@ The immutable baseline tags in this repository point to commit
 The hashes match the corresponding directories at the source commit. See
 `provenance/source.json` and `provenance/baselines.json`.
 
+`npm run validate:source-provenance` independently clones the public source
+repository, fetches the exact pinned commit, deterministically hashes the tracked
+files under both workload paths, and compares those hashes with the committed
+provenance record. This network-backed check runs in the complete validation and
+CI; `npm run validate:framework` retains offline checks against this repository's
+immutable baseline tags.
+
 Excluded: prior measured evidence, run transcripts, source bundles/patches,
 generated dashboard output, `node_modules`, `bin`, `obj`, and source Git history.
+
+The specification workflow is adapted from GitHub Spec Kit at commit
+`5cf60225e989ee9c7d9ac789352838676a00181b`. Upstream template blob hashes and
+the adaptation boundary are recorded in `provenance/spec-kit.json`.

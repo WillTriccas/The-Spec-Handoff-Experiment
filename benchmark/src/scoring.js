@@ -28,8 +28,8 @@ import { loadScoringConfig } from "./config.js";
  * "failed" -- a gate the evaluator did not explicitly mark `true` is never
  * silently treated as passed.
  *
- * Non-completed runs (`executionStatus !== "completed"`, e.g. "failed",
- * "timed-out", "cancelled") always score 0 and fail every applicable gate,
+ * Non-completed runs (`executionStatus !== "completed"`, e.g. "failed" or
+ * "cancelled") always score 0 and fail every applicable gate,
  * regardless of what the evaluator's dimension scores or hard-gate entries
  * say -- an incomplete run cannot be credited with partial quality or
  * partial gate passage.

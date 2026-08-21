@@ -23,11 +23,26 @@ const config = loadExperimentConfig();
 assert.equal(config.status, "not-evaluated");
 assert.deepEqual(
   config.lanes.map((lane) => lane.id).sort(),
-  ["mai-spec", "opus-spec"]
+  ["mai-spec", "opus-raw"]
 );
 assert.equal(config.repetitionsPerLane, 3);
-assert.equal(config.executionPolicy.timeoutSeconds, 7200);
+assert.equal(config.executionPolicy.timeoutSeconds, null);
+assert.equal(config.executionPolicy.toolCallCap, null);
 assert.equal(config.executionPolicy.selectiveRerunsAllowed, false);
+assert.equal(config.authoring.methodology, "github-spec-kit");
+assert.equal(
+  config.authoring.methodologyCommit,
+  "5cf60225e989ee9c7d9ac789352838676a00181b"
+);
+assert.deepEqual(config.authoring.requiredPhases, [
+  "constitution",
+  "specify",
+  "clarify",
+  "plan",
+  "checklist",
+  "tasks",
+  "analyze"
+]);
 
 const planned = assignRandomizedOrder(buildPlannedRuns(config))
   .sort((left, right) => left.executionOrder - right.executionOrder);
@@ -47,7 +62,7 @@ assert.ok(
 );
 
 const manifest = readJson(
-  "evidence/test-runs/2026-08-21-v1.0.0/manifest.json"
+  "evidence/test-runs/2026-08-21-v2.0.0/manifest.json"
 );
 assert.equal(manifest.status, "not-evaluated");
 assert.deepEqual(
@@ -60,9 +75,15 @@ assert.deepEqual(
 assert.ok(
   manifest.plannedCells.every((cell) => cell.status === "not-evaluated")
 );
+assert.equal(manifest.timeout, null);
+assert.deepEqual(manifest.measurements, [
+  "sealed-output-quality-score",
+  "productive-execution-seconds",
+  "implementation-token-total"
+]);
 
 const status = readJson(
-  "evidence/test-runs/2026-08-21-v1.0.0/reports/status.json"
+  "evidence/test-runs/2026-08-21-v2.0.0/reports/status.json"
 );
 for (const key of [
   "status",
@@ -70,12 +91,16 @@ for (const key of [
   "implementationTokens",
   "endToEndTokens",
   "productiveTime",
+  "wallClockTime",
   "queueAndThrottleTime"
 ]) {
   assert.equal(status[key], "not-evaluated");
 }
+assert.equal(status.timeout, null);
 
 const provenance = readJson("provenance/baselines.json");
+const specKitProvenance = readJson("provenance/spec-kit.json");
+assert.equal(specKitProvenance.commit, config.authoring.methodologyCommit);
 assert.equal(
   provenance.sourceCommit,
   "05547458aeb09d651237fa521459d742e1d36e85"

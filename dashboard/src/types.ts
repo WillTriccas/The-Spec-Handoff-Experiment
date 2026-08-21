@@ -1,7 +1,7 @@
 export type PlannedCell = {
   runId: string;
   episodeId: 'modernization' | 'audit-feature';
-  laneId: 'opus-spec' | 'mai-spec';
+  laneId: 'opus-raw' | 'mai-spec';
   repetition: 1 | 2 | 3;
   executionOrder: number;
   modelId: 'claude-opus-5' | 'mai-code-1.1-flash';
@@ -10,7 +10,7 @@ export type PlannedCell = {
 };
 
 export type EvidenceManifest = {
-  schemaVersion: 'test-run-evidence-manifest/1.0.0';
+  schemaVersion: 'test-run-evidence-manifest/2.0.0';
   version: string;
   status: 'not-evaluated';
   hypothesis: string;
