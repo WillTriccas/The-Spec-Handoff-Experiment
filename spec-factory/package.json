@@ -1,6 +1,6 @@
 {
-  "name": "@spec-demo/spec-factory",
-  "version": "0.1.0",
+  "name": "@spec-handoff/spec-factory",
+  "version": "1.0.0",
   "private": true,
   "type": "module",
   "bin": {
@@ -12,4 +12,3 @@
     "check": "node --check src/index.js"
   }
 }
-

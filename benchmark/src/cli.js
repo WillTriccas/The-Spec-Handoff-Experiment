@@ -61,16 +61,6 @@ export function cmdListRuns(options = {}) {
       );
     }
 
-    export function cmdPrepareAuthoring(options) {
-      const { episode, out } = options;
-      if (!episode || !out) {
-        console.error("Usage: benchmark prepare-authoring --episode <id> --out <dir>");
-        return 1;
-      }
-      const result = prepareAuthoringWorkspace(episode, out);
-      console.log(JSON.stringify(result, null, 2));
-      return 0;
-    }
     return 0;
   }
   for (const run of runs) {
@@ -78,6 +68,17 @@ export function cmdListRuns(options = {}) {
       `${run.runId.padEnd(28)} episode=${run.episodeId.padEnd(14)} lane=${run.laneId.padEnd(15)} model=${run.modelDisplayName.padEnd(20)} mode=${run.inputMode.padEnd(4)} rep=${run.repetition}`
     );
   }
+  return 0;
+}
+
+export function cmdPrepareAuthoring(options) {
+  const { episode, out } = options;
+  if (!episode || !out) {
+    console.error("Usage: benchmark prepare-authoring --episode <id> --out <dir>");
+    return 1;
+  }
+  const result = prepareAuthoringWorkspace(episode, out);
+  console.log(JSON.stringify(result, null, 2));
   return 0;
 }
 

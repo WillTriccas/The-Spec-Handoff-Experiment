@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://example.local/spec-demo/audit-adapter.schema.json",
+  "$id": "https://github.com/WillTriccas/The-Spec-Handoff-Experiment/contracts/audit-adapter.schema.json",
   "title": "Audit feature black-box adapter",
   "type": "object",
   "additionalProperties": false,

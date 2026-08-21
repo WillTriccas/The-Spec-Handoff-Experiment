@@ -1,6 +1,6 @@
 {
-  "name": "@spec-demo/benchmark",
-  "version": "0.1.0",
+  "name": "@spec-handoff/benchmark",
+  "version": "1.0.0",
   "private": true,
   "type": "module",
   "bin": {
@@ -12,4 +12,3 @@
     "check": "node --check src/index.js"
   }
 }
-

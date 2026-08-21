@@ -13,6 +13,10 @@ export function createBaseEvidence(episodeId) {
 
   return {
     schemaVersion: EVIDENCE_SCHEMA_VERSION,
+    attestation: {
+      independentFromSpecAuthors: true,
+      statement: 'The sealed evaluator was authored and operated independently from specification authors and remained blind to approved specification content.'
+    },
     evaluator: {
       name: 'sealed-ai-sdlc-benchmark-evaluator',
       version: EVALUATOR_VERSION,

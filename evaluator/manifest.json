@@ -39,8 +39,8 @@
     "contracts/candidate-adapter.schema.json",
     "contracts/audit-adapter.schema.json",
     "benchmark/config/scoring.json",
-    "benchmark/prompts/modernization-raw.md",
-    "benchmark/prompts/audit-feature-raw.md",
+    "benchmark/prompts/modernization.md",
+    "benchmark/prompts/audit-feature.md",
     "src/legacy-trade-reconciliation/**",
     "src/canonical-modernized/**"
   ],

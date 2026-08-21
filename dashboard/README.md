@@ -1,37 +1,12 @@
 # Dashboard
 
-A standalone dashboard for the 24 bounded-measured SpecForge FSI benchmark runs.
-It reads `evidence/measured/report.json`; illustrative fixtures remain separate.
+A measured-ready React dashboard bundled as one HTML file. Before execution it
+shows only the pre-registered matrix, protocol, and `not-evaluated` statuses.
 
-## Development
-
-```bash
-npm install
-npm run dev
+```powershell
+npm --workspace dashboard run test
+npm --workspace dashboard run build:singlefile
 ```
 
-## Build
-
-To build the standard distributable dashboard:
-
-```bash
-npm run build
-```
-
-To build a single self-contained HTML file (with all CSS/JS assets inlined):
-
-```bash
-npm run build:singlefile
-```
-
-## Testing
-
-```bash
-npm run test
-```
-
-## Theme
-
-The dashboard uses the Clawpilot theme system. It checks the `clawpilotTheme`
-query-string parameter or falls back to `prefers-color-scheme`. All colors use
-the `--cp-*` theme variables.
+Generated output is written to `dashboard/dist-single/index.html` and is not
+tracked.

@@ -51,7 +51,11 @@ function commonRequired(values, label) {
   return commonNullable(values, label);
 }
 
-function validateMeasuredMatrix(runs, experimentConfig) {
+export function validateMeasuredReportSet(runs, experimentConfig = loadExperimentConfig()) {
+  const versions = unique(runs.map((run) => run.benchmarkVersion));
+  if (versions.length !== 1 || versions[0] !== experimentConfig.benchmarkVersion) {
+    throw new Error("Cannot build measured report: mixed or unexpected benchmark versions");
+  }
   const expected = new Map();
   for (const plan of assignRandomizedOrder(buildPlannedRuns(experimentConfig))) {
     const key = `${plan.episodeId}|${plan.laneId}|${plan.repetition}`;
@@ -108,6 +112,16 @@ function validateMeasuredMatrix(runs, experimentConfig) {
     throw new Error(
       `Cannot build measured report: incomplete benchmark matrix; missing ${missing.length} run cell(s): ${missing.join(", ")}`
     );
+  }
+
+  for (const episode of experimentConfig.episodes) {
+    const episodeRuns = runs.filter((run) => run.episodeId === episode.id);
+    const specHashes = unique(episodeRuns.map((run) => run.spec?.sha256));
+    if (specHashes.length !== 1 || !/^[a-f0-9]{64}$/.test(specHashes[0] ?? "")) {
+      throw new Error(
+        `Cannot build measured report: ${episode.id} lanes do not share one approved specification hash`
+      );
+    }
   }
 }
 
@@ -302,6 +316,7 @@ function validateBaselinesAgainstFreeze(runs, experimentConfig, freezeRecord) {
     if (!frozenBaseline) {
       throw new Error(`Cannot build measured report: freeze record has no ${episode.id} baseline`);
     }
+
     const actual = {
       ref: commonRequired(
         episodeRuns.map((run) => run.baseline?.ref ?? run.baselineRef),
@@ -322,6 +337,30 @@ function validateBaselinesAgainstFreeze(runs, experimentConfig, freezeRecord) {
       actual.sha256 !== frozenBaseline.sha256
     ) {
       throw new Error(`Cannot build measured report: ${episode.id} baseline does not match the freeze record`);
+    }
+  }
+}
+
+export function validateSpecHashesAgainstFreeze(runs, experimentConfig, freezeRecord) {
+  for (const episode of experimentConfig.episodes) {
+    const frozenSpec = freezeRecord.promptsAndSpecs?.find(
+      (entry) => entry.episodeId === episode.id
+    );
+    const expectedSha256 = frozenSpec?.assembledSpecSha256;
+    if (!/^[a-f0-9]{64}$/.test(expectedSha256 ?? "")) {
+      throw new Error(
+        `Cannot build measured report: freeze record has no approved specification hash for ${episode.id}`
+      );
+    }
+    const mismatched = runs.filter(
+      (run) =>
+        run.episodeId === episode.id &&
+        run.spec?.sha256 !== expectedSha256
+    );
+    if (mismatched.length > 0) {
+      throw new Error(
+        `Cannot build measured report: ${episode.id} run specification hash does not match the freeze record`
+      );
     }
   }
 }
@@ -577,7 +616,7 @@ export function buildReport({
         );
       }
     }
-    validateMeasuredMatrix(runs, experimentConfig);
+    validateMeasuredReportSet(runs, experimentConfig);
     if (repetitionsPerLane !== experimentConfig.repetitionsPerLane) {
       throw new Error("Cannot build measured report: repetitionsPerLane does not match the experiment config");
     }
@@ -614,6 +653,7 @@ export function buildReport({
       throw new Error("Cannot build measured report: scoring configuration object does not match the freeze record");
     }
     validateBaselinesAgainstFreeze(runs, experimentConfig, trustedFreezeRecord);
+    validateSpecHashesAgainstFreeze(runs, experimentConfig, trustedFreezeRecord);
   }
   const trustedCostsConfig =
     metadata.dataKind === "measured"
@@ -646,6 +686,19 @@ export function buildReport({
           })
         )
       : runs;
+  if (metadata.dataKind === "measured") {
+    for (const run of effectiveRuns) {
+      const status = run.execution?.status ?? run.status;
+      if (
+        status !== "completed" &&
+        (run.qualityScore !== 0 || run.hardGatesPassed !== false)
+      ) {
+        throw new Error(
+          `Cannot build measured report: non-completed run ${run.runId} was not normalized to zero score and failed gates`
+        );
+      }
+    }
+  }
 
   const byEpisode = new Map();
   for (const run of effectiveRuns) {

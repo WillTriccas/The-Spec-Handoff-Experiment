@@ -28,6 +28,6 @@ Timeouts terminate the spawned adapter process tree using executable/argument pr
 
 ## Blindness attestation
 
-Sources used: `contracts/candidate-adapter.schema.json`, `contracts/audit-adapter.schema.json`, `benchmark/prompts/*-raw.md`, `benchmark/config/scoring.json`, `src/legacy-trade-reconciliation/**`, and `src/canonical-modernized/**`.
+Sources used: `contracts/candidate-adapter.schema.json`, `contracts/audit-adapter.schema.json`, `benchmark/prompts/modernization.md`, `benchmark/prompts/audit-feature.md`, `benchmark/config/scoring.json`, `src/legacy-trade-reconciliation/**`, and `src/canonical-modernized/**`.
 
 I remained blind to `spec-factory/`, `evidence/`, approved spec content, and expected measured benchmark output. Hidden evaluator fixtures and expected checks were authored only from the allowed public sources above.

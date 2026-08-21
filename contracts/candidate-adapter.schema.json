@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://example.local/spec-demo/candidate-adapter.schema.json",
+  "$id": "https://github.com/WillTriccas/The-Spec-Handoff-Experiment/contracts/candidate-adapter.schema.json",
   "title": "Candidate build and execution adapter",
   "type": "object",
   "additionalProperties": false,
@@ -46,4 +46,3 @@
     }
   }
 }
-

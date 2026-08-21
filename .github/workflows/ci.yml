@@ -33,13 +33,13 @@ jobs:
       - name: Install JavaScript dependencies
         run: npm ci
 
-      - name: Validate demo
+      - name: Validate experiment
         shell: pwsh
         run: .\scripts\validate.ps1 -SkipNpmInstall
 
       - name: Upload self-contained dashboard
         uses: actions/upload-artifact@v4
         with:
-          name: specforge-dashboard
+          name: spec-handoff-dashboard
           path: dashboard/dist-single/index.html
           if-no-files-found: error

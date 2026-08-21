@@ -98,7 +98,7 @@ export function materializeDirectoryAtRef(
 function initializeWorkspaceRepository(workspaceDir) {
   execFileSync("git", ["init", "--quiet"], { cwd: workspaceDir });
   execFileSync("git", ["config", "core.autocrlf", "false"], { cwd: workspaceDir });
-  execFileSync("git", ["config", "user.name", "SpecForge Benchmark"], { cwd: workspaceDir });
+  execFileSync("git", ["config", "user.name", "Spec Handoff Benchmark"], { cwd: workspaceDir });
   execFileSync(
     "git",
     ["config", "user.email", "benchmark@specforge.invalid"],

@@ -91,5 +91,30 @@ export function assignRandomizedOrder(
     const j = Math.floor(rand() * (i + 1));
     [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
   }
-  return shuffled.map((run, index) => ({ ...run, executionOrder: index + 1 }));
+  const interleaved = [];
+  while (shuffled.length > 0) {
+    const previous = interleaved.at(-1);
+    let nextIndex = 0;
+    if (previous) {
+      nextIndex = shuffled.findIndex(
+        (run) =>
+          run.episodeId !== previous.episodeId &&
+          run.laneId !== previous.laneId
+      );
+      if (nextIndex < 0) {
+        nextIndex = shuffled.findIndex(
+          (run) => run.episodeId !== previous.episodeId
+        );
+      }
+      if (nextIndex < 0) {
+        nextIndex = shuffled.findIndex((run) => run.laneId !== previous.laneId);
+      }
+      if (nextIndex < 0) nextIndex = 0;
+    }
+    interleaved.push(shuffled.splice(nextIndex, 1)[0]);
+  }
+  return interleaved.map((run, index) => ({
+    ...run,
+    executionOrder: index + 1
+  }));
 }

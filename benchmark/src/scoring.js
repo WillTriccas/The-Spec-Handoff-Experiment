@@ -34,10 +34,52 @@ import { loadScoringConfig } from "./config.js";
  * say -- an incomplete run cannot be credited with partial quality or
  * partial gate passage.
  */
+export function normalizeEvaluatorEvidence(evaluator) {
+  if (
+    evaluator?.attestation?.independentFromSpecAuthors === true &&
+    evaluator?.scores &&
+    evaluator?.hardGates
+  ) {
+    return evaluator;
+  }
+  if (
+    evaluator?.attestation?.independentFromSpecAuthors !== true ||
+    !evaluator?.dimensions ||
+    !evaluator?.gates
+  ) {
+    return evaluator;
+  }
+  const scores = Object.fromEntries(
+    Object.entries(evaluator.dimensions).map(([dimension, result]) => {
+      const score =
+        typeof result?.score === "number" &&
+        typeof result?.weight === "number" &&
+        result.weight > 0
+          ? Math.round((result.score / result.weight) * 10000) / 100
+          : result?.passed === true
+            ? 100
+            : 0;
+      return [dimension, Math.max(0, Math.min(100, score))];
+    })
+  );
+  const hardGates = Object.fromEntries(
+    Object.entries(evaluator.gates).map(([gate, result]) => [
+      gate,
+      result?.applicable !== false && result?.passed === true
+    ])
+  );
+  return {
+    ...evaluator,
+    scores,
+    hardGates
+  };
+}
+
 export function scoreRun(
-  evaluator,
+  evaluatorInput,
   { scoringConfig = loadScoringConfig(), episodeId, executionStatus = "completed", inputMode } = {}
 ) {
+  const evaluator = normalizeEvaluatorEvidence(evaluatorInput);
   if (!episodeId) {
     throw new Error("scoreRun requires an episodeId to determine which hard gates apply");
   }
@@ -109,4 +151,3 @@ export function scoreRun(
     warnings
   };
 }
-

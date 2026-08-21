@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://example.local/spec-demo/report.schema.json",
+  "$id": "https://github.com/WillTriccas/The-Spec-Handoff-Experiment/contracts/report.schema.json",
   "title": "Benchmark evidence report",
   "type": "object",
   "additionalProperties": false,

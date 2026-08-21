@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://example.local/spec-demo/run.schema.json",
+  "$id": "https://github.com/WillTriccas/The-Spec-Handoff-Experiment/contracts/run.schema.json",
   "title": "Benchmark run artifact",
   "type": "object",
   "additionalProperties": false,
