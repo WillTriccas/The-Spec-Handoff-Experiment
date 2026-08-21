@@ -66,3 +66,4 @@ finally {
 }
 
 Write-Host "All Spec Handoff Experiment validations passed; measured freeze remains correctly blocked."
+exit 0
