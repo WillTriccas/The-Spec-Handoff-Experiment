@@ -1,0 +1,3 @@
+trade_id,action,note,approved_by
+T-1003,SuppressBreak,FX leg booked in broker mirror,ops-supervisor
+T-1004,ForceMatch,Cash rounded by legacy custodian,ops-manager

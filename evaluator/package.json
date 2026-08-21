@@ -1,0 +1,17 @@
+{
+  "name": "sealed-ai-sdlc-benchmark-evaluator",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "bin": {
+    "sealed-evaluator": "./bin/evaluate.js"
+  },
+  "scripts": {
+    "test": "node --test",
+    "evaluate": "node ./bin/evaluate.js evaluate",
+    "fixture-hashes": "node ./bin/evaluate.js fixture-hashes"
+  }
+}

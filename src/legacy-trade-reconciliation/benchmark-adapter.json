@@ -1,0 +1,35 @@
+{
+  "schemaVersion": "1.0.0",
+  "workingDirectory": ".",
+  "build": {
+    "executable": "dotnet",
+    "arguments": [
+      "msbuild",
+      "LegacyTradeReconciliation.sln",
+      "/t:Restore,Build",
+      "/p:Configuration=Release"
+    ],
+    "allowedExitCodes": [0]
+  },
+  "test": {
+    "executable": "tests/LegacyTradeReconciliation.CharacterizationTests/bin/Release/LegacyTradeReconciliation.CharacterizationTests.exe",
+    "arguments": [],
+    "allowedExitCodes": [0]
+  },
+  "run": {
+    "executable": "LegacyTradeReconciliation/bin/Release/LegacyTradeReconciliation.exe",
+    "arguments": [
+      "{businessDate}",
+      "{inputDirectory}",
+      "{outputDirectory}"
+    ],
+    "allowedExitCodes": [0]
+  },
+  "outputs": [
+    "matched-trades.csv",
+    "break-queue.csv",
+    "end-of-day-report.txt",
+    "run-ledger.csv"
+  ]
+}
+

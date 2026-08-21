@@ -1,0 +1,50 @@
+{
+  "schemaVersion": "1.0.0",
+  "workingDirectory": ".",
+  "build": {
+    "executable": "dotnet",
+    "arguments": [
+      "build",
+      "TradeRecon.sln",
+      "--configuration",
+      "Release"
+    ],
+    "allowedExitCodes": [0]
+  },
+  "test": {
+    "executable": "dotnet",
+    "arguments": [
+      "test",
+      "TradeRecon.sln",
+      "--configuration",
+      "Release",
+      "--no-build"
+    ],
+    "allowedExitCodes": [0]
+  },
+  "run": {
+    "executable": "dotnet",
+    "arguments": [
+      "run",
+      "--project",
+      "src/TradeRecon.Console/TradeRecon.Console.csproj",
+      "--configuration",
+      "Release",
+      "--no-build",
+      "--",
+      "--date",
+      "{businessDate}",
+      "--fixtures",
+      "{inputDirectory}",
+      "--out",
+      "{outputDirectory}",
+      "--json"
+    ],
+    "allowedExitCodes": [0, 2]
+  },
+  "outputs": [
+    "{businessDate}/eod-summary.txt",
+    "{businessDate}/eod-break-register.csv",
+    "{businessDate}/eod-result.json"
+  ]
+}

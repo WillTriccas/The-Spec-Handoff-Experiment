@@ -1,0 +1,15 @@
+{
+  "schemaVersion": "source-provenance/1.0.0",
+  "sourceRepository": "https://github.com/WillTriccas/The-Spec-Advantage-Demo",
+  "sourceCommit": "05547458aeb09d651237fa521459d742e1d36e85",
+  "reusePolicy": "Only tracked reusable workloads, fixtures, adapters, evaluator, contracts, spec-factory capabilities, tests, and documentation/dashboard patterns were ported.",
+  "excluded": [
+    "prior measured evidence",
+    "run transcripts",
+    "source bundles and patches",
+    "generated dashboard output",
+    "node_modules",
+    "bin and obj build output",
+    "source Git history"
+  ]
+}

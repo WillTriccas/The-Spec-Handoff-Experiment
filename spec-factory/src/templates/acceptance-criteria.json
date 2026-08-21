@@ -1,0 +1,12 @@
+{
+  "items": [
+    {
+      "id": "AC-1",
+      "requirementId": "REQ-1",
+      "given": "the starting context/state",
+      "when": "the action under test",
+      "then": "the observable, verifiable outcome",
+      "testable": true
+    }
+  ]
+}

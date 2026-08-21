@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
+    <PackageReference Include="xunit" Version="2.9.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\TradeRecon.Domain\TradeRecon.Domain.csproj" />
+    <ProjectReference Include="..\..\src\TradeRecon.Application\TradeRecon.Application.csproj" />
+    <ProjectReference Include="..\..\src\TradeRecon.Infrastructure\TradeRecon.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\TradeRecon.Console\TradeRecon.Console.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="..\..\fixtures\*.csv" Link="fixtures\%(Filename)%(Extension)">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+</Project>

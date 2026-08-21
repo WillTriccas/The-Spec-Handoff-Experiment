@@ -1,0 +1,48 @@
+{
+  "schemaVersion": "sealed-evaluator-manifest/1.0.0",
+  "evaluatorVersion": "1.0.0",
+  "nodeRuntime": ">=20",
+  "episodes": [
+    "modernization",
+    "audit-feature"
+  ],
+  "adapterSchemas": {
+    "modernization": "../contracts/candidate-adapter.schema.json",
+    "audit-feature": "../contracts/audit-adapter.schema.json"
+  },
+  "evidenceSchemaVersion": "sealed-evaluator-evidence/1.0.0",
+  "commandTimeoutsMs": {
+    "build": 120000,
+    "test": 120000,
+    "run": 60000,
+    "auditCommand": 15000,
+    "scanner": 30000
+  },
+  "scannerRulesets": [
+    {
+      "id": "static-secret-patterns",
+      "version": "2026.08.12",
+      "description": "Pinned regex checks for common committed credential material in text/source files."
+    },
+    {
+      "id": "static-unsafe-execution-deserialization",
+      "version": "2026.08.12",
+      "description": "Pinned source-pattern checks for unsafe process execution and unsafe deserialization APIs."
+    },
+    {
+      "id": "dependency-vulnerability-command-output",
+      "version": "2026.08.12",
+      "description": "Best-effort package manager vulnerability parsing where candidate manifests exist; high and critical dependency findings are blocking."
+    }
+  ],
+  "allowedSourcesUsedForDesign": [
+    "contracts/candidate-adapter.schema.json",
+    "contracts/audit-adapter.schema.json",
+    "benchmark/config/scoring.json",
+    "benchmark/prompts/modernization-raw.md",
+    "benchmark/prompts/audit-feature-raw.md",
+    "src/legacy-trade-reconciliation/**",
+    "src/canonical-modernized/**"
+  ],
+  "blindnessAttestation": "The evaluator was designed from the allowed public contracts, prompts, scoring config, and source baselines listed above. It does not use, embed, or derive from spec-factory/, evidence/, approved spec content, or expected measured benchmark output."
+}

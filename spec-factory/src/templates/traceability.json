@@ -1,0 +1,10 @@
+{
+  "links": [
+    {
+      "requirementId": "REQ-1",
+      "acceptanceCriteriaIds": ["AC-1"],
+      "invariantIds": [],
+      "riskIds": []
+    }
+  ]
+}

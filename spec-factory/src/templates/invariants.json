@@ -1,0 +1,9 @@
+{
+  "items": [
+    {
+      "id": "INV-1",
+      "statement": "State a domain invariant that must always hold, independent of implementation.",
+      "enforcementPoint": "Where in the system this invariant is enforced (e.g. a specific service, database constraint, or validation layer)."
+    }
+  ]
+}

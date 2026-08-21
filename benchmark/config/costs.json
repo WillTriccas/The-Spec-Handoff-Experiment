@@ -1,0 +1,35 @@
+{
+  "schemaVersion": "2.0.0",
+  "pricingAsOf": null,
+  "currency": "USD",
+  "source": null,
+  "rateType": "unavailable",
+  "models": {
+    "mai-code-1.1-flash": {
+      "pricingAsOf": null,
+      "source": null,
+      "rateType": null,
+      "inputPerMillionTokens": null,
+      "cachedInputPerMillionTokens": null,
+      "outputPerMillionTokens": null,
+      "reasoningOutputPerMillionTokens": null,
+      "flatChargeUsd": null,
+      "notes": "Set all applicable fields from an approved, dated list, contracted, or internal chargeback source before freeze."
+    },
+    "claude-opus-5": {
+      "pricingAsOf": null,
+      "source": null,
+      "rateType": null,
+      "inputPerMillionTokens": null,
+      "cachedInputPerMillionTokens": null,
+      "outputPerMillionTokens": null,
+      "reasoningOutputPerMillionTokens": null,
+      "flatChargeUsd": null,
+      "notes": "Set all applicable fields from an approved, dated list, contracted, or internal chargeback source before freeze."
+    }
+  },
+  "specAuthoringAmortization": {
+    "enabled": true,
+    "notes": "Amortize approved spec authoring cost across the repetitions that consume it. Keep cost null until priced authoring effort exists."
+  }
+}

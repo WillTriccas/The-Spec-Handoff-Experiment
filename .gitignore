@@ -1,0 +1,17 @@
+node_modules/
+dist/
+coverage/
+TestResults/
+bin/
+obj/
+!benchmark/bin/
+!benchmark/bin/**
+!evaluator/bin/
+!evaluator/bin/**
+!spec-factory/bin/
+!spec-factory/bin/**
+.runs/
+.prepared/
+*.user
+*.suo
+*.log

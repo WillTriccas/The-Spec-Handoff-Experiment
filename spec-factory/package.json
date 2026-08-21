@@ -1,0 +1,15 @@
+{
+  "name": "@spec-demo/spec-factory",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "spec-factory": "bin/spec-factory.js"
+  },
+  "scripts": {
+    "build": "node --check src/index.js",
+    "test": "node --test",
+    "check": "node --check src/index.js"
+  }
+}
+

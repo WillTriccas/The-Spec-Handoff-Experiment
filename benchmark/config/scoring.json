@@ -1,0 +1,68 @@
+{
+  "schemaVersion": "2.0.0",
+  "weights": {
+    "functionalCorrectness": 35,
+    "behaviorPreservation": 20,
+    "securityControls": 15,
+    "maintainability": 15,
+    "operability": 10,
+    "scopeTraceability": 5
+  },
+  "allHardGates": [
+    "build",
+    "essential-business-invariants",
+    "no-critical-security-findings",
+    "maker-checker-separation",
+    "audit-integrity"
+  ],
+  "hardGatesByEpisode": {
+    "modernization": [
+      "build",
+      "essential-business-invariants",
+      "no-critical-security-findings"
+    ],
+    "audit-feature": [
+      "build",
+      "essential-business-invariants",
+      "no-critical-security-findings",
+      "maker-checker-separation",
+      "audit-integrity"
+    ]
+  },
+  "claimRule": {
+    "comparisonLane": "mai-spec",
+    "controlLane": "opus-spec",
+    "equivalentWithinPoints": 3,
+    "betterByMoreThanPoints": 3,
+    "aggregation": "marginal-medians",
+    "requireAllHardGates": true,
+    "comparisonLaneGatesDetermineEligibility": true,
+    "controlLaneGateFailuresAreReportedSeparately": true,
+    "inconclusiveWhenDeltaWithinObservedLaneSpread": true,
+    "overallRollup": "weaker-episode",
+    "qualityAndEfficiencyVerdictsAreSeparate": true,
+    "notes": "The headline hypothesis is supported per episode only when MAI is equivalent-or-better on quality, every MAI run passes all applicable hard gates, and MAI uses fewer median implementation tokens than Opus."
+  },
+  "efficiencyRule": {
+    "primaryMetrics": [
+      "implementation-token-total",
+      "end-to-end-token-total-including-amortized-authoring"
+    ],
+    "tokenCategories": [
+      "uncached-input",
+      "cached-input",
+      "output",
+      "reasoning"
+    ],
+    "elapsedTimeIsContextOnly": true,
+    "queueAndThrottleTimeExcludedFromProductiveTime": true,
+    "unknownCostIsUnavailable": true,
+    "monetaryCostIsNotAHeadlineMetric": true
+  },
+  "secondaryClaimRules": [],
+  "failedRunTreatment": {
+    "includeInAggregation": true,
+    "qualityScore": 0,
+    "applicableGates": "failed"
+  }
+}

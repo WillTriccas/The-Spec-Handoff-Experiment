@@ -1,0 +1,5 @@
+trade_id,status,account,instrument,quantity,settlement_date,currency,position_id,settlement_id,override_note
+T-1001,Matched,ACC-001,IBM.N,100,2025-03-17,USD,P-2001,S-3001,
+T-1002,Matched,ACC-001,MSFT.OQ,50,2025-03-17,USD,P-2002,S-3002,
+T-1003,ManualOverrideSuppressed,ACC-002,VOD.L,1000,2025-03-17,GBP,P-2003,S-3003,FX leg booked in broker mirror
+T-1004,ManualOverrideMatched,ACC-003,TSLA.OQ,75,2025-03-18,USD,P-2004,S-3004,Cash rounded by legacy custodian

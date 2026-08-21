@@ -1,0 +1,106 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/WillTriccas/The-Spec-Handoff-Experiment/contracts/specification-authoring-evidence.schema.json",
+  "title": "Specification authoring evidence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "status",
+    "episodeId",
+    "prompt",
+    "baseline",
+    "model",
+    "session",
+    "tokens",
+    "transcript",
+    "blindnessAttestation",
+    "approvedSpecification"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "specification-authoring-evidence/1.0.0" },
+    "status": { "enum": ["completed", "failed", "timed-out", "cancelled"] },
+    "episodeId": { "enum": ["modernization", "audit-feature"] },
+    "prompt": { "$ref": "#/$defs/contentReference" },
+    "baseline": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ref", "commit", "sha256"],
+      "properties": {
+        "ref": { "type": "string", "minLength": 1 },
+        "commit": { "type": "string", "pattern": "^[a-f0-9]{40}$" },
+        "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+      }
+    },
+    "model": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "agentVersion", "reasoningEffort"],
+      "properties": {
+        "id": { "const": "claude-opus-5" },
+        "agentVersion": { "type": "string", "minLength": 1 },
+        "reasoningEffort": { "const": "high" }
+      }
+    },
+    "session": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["startedAt", "endedAt", "freshConversation"],
+      "properties": {
+        "startedAt": { "type": "string", "format": "date-time" },
+        "endedAt": { "type": "string", "format": "date-time" },
+        "freshConversation": { "const": true }
+      }
+    },
+    "tokens": { "$ref": "#/$defs/tokens" },
+    "transcript": { "$ref": "#/$defs/contentReference" },
+    "blindnessAttestation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["attested", "statement"],
+      "properties": {
+        "attested": { "const": true },
+        "statement": { "type": "string", "minLength": 1 }
+      }
+    },
+    "approvedSpecification": {
+      "oneOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["manifestPath", "manifestSha256", "contentSha256", "approvedAt", "reviewer"],
+          "properties": {
+            "manifestPath": { "type": "string", "minLength": 1 },
+            "manifestSha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+            "contentSha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+            "approvedAt": { "type": "string", "format": "date-time" },
+            "reviewer": { "type": "string", "minLength": 1 }
+          }
+        }
+      ]
+    }
+  },
+  "$defs": {
+    "contentReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256"],
+      "properties": {
+        "path": { "type": "string", "minLength": 1 },
+        "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+      }
+    },
+    "tokens": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["uncachedInput", "cachedInput", "output", "reasoning"],
+      "properties": {
+        "uncachedInput": { "type": "integer", "minimum": 0 },
+        "cachedInput": { "type": "integer", "minimum": 0 },
+        "output": { "type": "integer", "minimum": 0 },
+        "reasoning": { "type": "integer", "minimum": 0 }
+      }
+    }
+  }
+}

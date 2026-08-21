@@ -1,0 +1,11 @@
+{
+  "schemaVersion": "pre-measurement-status/1.0.0",
+  "status": "not-evaluated",
+  "quality": "not-evaluated",
+  "implementationTokens": "not-evaluated",
+  "endToEndTokens": "not-evaluated",
+  "productiveTime": "not-evaluated",
+  "queueAndThrottleTime": "not-evaluated",
+  "pricing": "unavailable",
+  "message": "No measured specification-authoring or implementation sessions have run."
+}

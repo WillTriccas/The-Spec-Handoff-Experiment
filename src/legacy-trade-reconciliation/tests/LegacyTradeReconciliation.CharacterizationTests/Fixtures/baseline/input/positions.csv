@@ -1,0 +1,5 @@
+position_id,account,instrument,quantity,settlement_date,currency
+P-2001,ACC-001,IBM.N,100,2025-03-17,USD
+P-2002,ACC-001,MSFT.OQ,50,2025-03-17,USD
+P-2003,ACC-002,VOD.L,1000,2025-03-17,GBP
+P-2004,ACC-003,TSLA.OQ,75,2025-03-18,USD

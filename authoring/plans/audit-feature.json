@@ -1,0 +1,25 @@
+{
+  "schemaVersion": "specification-authoring-plan/1.0.0",
+  "status": "not-evaluated",
+  "episodeId": "audit-feature",
+  "modelId": "claude-opus-5",
+  "agentVersion": "1.0.80",
+  "reasoningEffort": "high",
+  "promptPath": "authoring/prompts/audit-feature.md",
+  "baselineRef": "refs/tags/baseline-canonical-modernized-v1",
+  "baselinePath": "src/canonical-modernized",
+  "outputPath": "specs/audit-feature/approved",
+  "evidencePath": "authoring/evidence/audit-feature.json",
+  "freshConversation": true,
+  "humanApprovalRequired": true,
+  "blindness": {
+    "deny": [
+      "evaluator/**",
+      "benchmark/config/scoring.json",
+      "contracts/run.schema.json",
+      "contracts/report.schema.json",
+      "evidence/**",
+      "specs/**/approved/**"
+    ]
+  }
+}

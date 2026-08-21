@@ -1,0 +1,7 @@
+{
+  "systemSummary": "Summarize the existing (brownfield) system relevant to this change, imported from code/doc discovery.",
+  "components": ["Existing module or service touched by this change"],
+  "dataFlows": ["Existing data flow that must be understood before changing behavior"],
+  "constraints": ["Technical or organizational constraint discovered (e.g. framework version, contract, SLA)"],
+  "knownBehaviors": ["Specific existing behavior that must be preserved or explicitly changed"]
+}

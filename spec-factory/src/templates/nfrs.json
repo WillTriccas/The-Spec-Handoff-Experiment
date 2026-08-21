@@ -1,0 +1,10 @@
+{
+  "items": [
+    {
+      "id": "NFR-1",
+      "category": "performance",
+      "statement": "State the non-functional requirement.",
+      "target": "Measurable target (e.g. p95 latency, uptime, throughput)."
+    }
+  ]
+}

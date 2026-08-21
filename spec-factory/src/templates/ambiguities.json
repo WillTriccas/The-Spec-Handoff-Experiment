@@ -1,0 +1,11 @@
+{
+  "items": [
+    {
+      "id": "AMB-1",
+      "description": "State the open question or ambiguous requirement discovered during framing/discovery.",
+      "severity": "critical",
+      "resolution": "State the resolving decision or explicit assumption made, and who made it.",
+      "status": "open"
+    }
+  ]
+}
