@@ -181,11 +181,11 @@ test('audit evaluator passes maker-checker, idempotency, conflict, export, and s
       process.exit(0);
     }
     if (mode === 'decide') {
+      if (requestId === 'REQ-C' && arg4 === 'reject') { emit({ requestId, status: 'conflict' }); process.exit(2); }
       const entries = read();
       const proposed = entries.find(entry => entry.requestId === requestId && entry.action === 'proposed');
       if (!proposed) { emit({ requestId, status: 'invalid' }); process.exit(2); }
       if (actor === proposed.proposer) { emit({ requestId, status: 'forbidden' }); process.exit(2); }
-      if (requestId === 'REQ-C' && arg4 === 'reject') { emit({ requestId, status: 'conflict' }); process.exit(2); }
       const final = entries.find(entry => entry.requestId === requestId && (entry.action === 'approved' || entry.action === 'rejected'));
       if (!final) {
         append(entries, { requestId, action: arg4 === 'reject' ? 'rejected' : 'approved', actor });
